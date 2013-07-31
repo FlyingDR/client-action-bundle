@@ -1,0 +1,27 @@
+{
+    "name": "flying/client-action-bundle",
+    "type": "symfony-bundle",
+    "description": "Symfony2 bundle with implementation of client actions",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Alexander Grimalovsky",
+            "email": "alexander.grimalovsky@gmail.com"
+        }
+    ],
+    "require": {
+        "flying/struct-bundle": "dev-master"
+    },
+    "autoload": {
+        "psr-0": {
+            "Flying\\Bundle\\ClientActionBundle": ""
+        }
+    },
+    "target-dir": "Flying/Bundle/ClientActionBundle",
+    "require-dev": {
+        "symfony/http-kernel": "~2.2",
+        "symfony/dependency-injection": "~2.2",
+        "symfony/yaml": "~2.2",
+        "symfony/config": "~2.2"
+    }
+}
