@@ -1,0 +1,8 @@
+parameters:
+    client_action.action.class: Flying\Bundle\ClientActionBundle\Struct\ClientAction
+    client_action.factory.class: Flying\Bundle\ClientActionBundle\Factory\ClientActionFactory
+
+services:
+    client_action.factory:
+        class: %client_action.factory.class%
+        arguments: [%client_action.action.class%, @?router]

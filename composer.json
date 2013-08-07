@@ -10,6 +10,7 @@
         }
     ],
     "require": {
+        "flying/struct": "~0.1,>=0.1.3",
         "flying/struct-bundle": "dev-master"
     },
     "autoload": {
@@ -22,6 +23,8 @@
         "symfony/http-kernel": "~2.2",
         "symfony/dependency-injection": "~2.2",
         "symfony/yaml": "~2.2",
-        "symfony/config": "~2.2"
+        "symfony/config": "~2.2",
+        "symfony/routing": "~2.2",
+        "mockery/mockery": "~0.8"
     }
 }
