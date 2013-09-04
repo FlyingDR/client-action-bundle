@@ -2,7 +2,24 @@ parameters:
     client_action.action.class: Flying\Bundle\ClientActionBundle\Struct\ClientAction
     client_action.factory.class: Flying\Bundle\ClientActionBundle\Factory\ClientActionFactory
 
+    client_action.state.class: Flying\Struct\StorableStruct
+
+    client_action.state.init_event_listener.class: Flying\Bundle\ClientActionBundle\EventListener\StateInitListener
+
+    client_action.state.nsmap.class: Flying\Struct\Configuration\NamespacesMap
+    client_action.state.nsmap.namespaces: ~
+
 services:
     client_action.factory:
         class: %client_action.factory.class%
         arguments: [%client_action.action.class%, @?router]
+    client_action.state:
+        class: %client_action.state.class%
+    client_action.state.init_event_listener:
+        class: %client_action.state.init_event_listener.class%
+        arguments: [@service_container]
+        tags:
+            - { name: kernel.event_subscriber }
+    client_action.state.nsmap:
+        class: %client_action.state.nsmap.class%
+        arguments: [%client_action.state.nsmap.namespaces%]

@@ -19,9 +19,12 @@ class ClientActionExtension extends Extension
      */
     public function load(array $configs, ContainerBuilder $container)
     {
-        $this->processConfiguration(new Configuration(), $configs);
         $loader = new Loader\YamlFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
         $loader->load('services.yml');
+        $config = $this->processConfiguration(new Configuration(), $configs);
+        if (sizeof($config['state_nsmap'])) {
+            $container->setParameter('client_action.state.nsmap.namespaces', $config['state_nsmap']);
+        }
     }
 
 }

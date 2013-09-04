@@ -10,7 +10,6 @@
         }
     ],
     "require": {
-        "flying/struct": "~0.1,>=0.1.3",
         "flying/struct-bundle": "dev-master"
     },
     "autoload": {
@@ -25,6 +24,8 @@
         "symfony/yaml": "~2.2",
         "symfony/config": "~2.2",
         "symfony/routing": "~2.2",
+        "symfony/event-dispatcher": "~2.2",
+        "sensio/framework-extra-bundle": "~2.2",
         "mockery/mockery": "~0.8"
     }
 }
