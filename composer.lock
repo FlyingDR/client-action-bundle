@@ -3,7 +3,7 @@
         "This file locks the dependencies of your project to a known state",
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file"
     ],
-    "hash": "162bd7b7ea1230cecc875903f18f11a0",
+    "hash": "f9e4f6d5bb4ac0b2d35ebaa58230100d",
     "packages": [
         {
             "name": "doctrine/annotations",
@@ -233,16 +233,16 @@
         },
         {
             "name": "flying/struct",
-            "version": "0.2.0",
+            "version": "0.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/FlyingDR/struct.git",
-                "reference": "6069ca01c0df9aea02d15882241cd26d952fea6d"
+                "reference": "c6670400e3607fc99308720274706886e67e922b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/FlyingDR/struct/zipball/6069ca01c0df9aea02d15882241cd26d952fea6d",
-                "reference": "6069ca01c0df9aea02d15882241cd26d952fea6d",
+                "url": "https://api.github.com/repos/FlyingDR/struct/zipball/c6670400e3607fc99308720274706886e67e922b",
+                "reference": "c6670400e3607fc99308720274706886e67e922b",
                 "shasum": ""
             },
             "require": {
@@ -271,7 +271,7 @@
                 }
             ],
             "description": "Implementation of generic structures",
-            "time": "2013-09-12 11:02:44"
+            "time": "2013-09-13 13:33:29"
         },
         {
             "name": "flying/struct-bundle",

@@ -203,7 +203,7 @@ class ClientAction extends Struct
     protected function parse($action)
     {
         $parts = array();
-        $keys = array_keys($this->_struct);
+        $keys = array_keys($this->struct);
         foreach ($keys as $key) {
             $parts[$key] = null;
         }

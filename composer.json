@@ -10,6 +10,7 @@
         }
     ],
     "require": {
+        "flying/struct": "~0.2,>=0.2.1",
         "flying/struct-bundle": "dev-master@dev"
     },
     "autoload": {
