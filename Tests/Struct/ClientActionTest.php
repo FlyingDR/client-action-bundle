@@ -9,7 +9,7 @@ use Mockery;
 
 class ClientActionTest extends TestCase
 {
-    protected $_tests = array(
+    protected $tests = array(
         array(
             'source'   => array(
                 'array'  => array(),
@@ -383,7 +383,7 @@ class ClientActionTest extends TestCase
         $tests = array();
         $ca = new ClientAction();
         $ca = $ca->toArray();
-        foreach ($this->_tests as $test) {
+        foreach ($this->tests as $test) {
             $expected = $test['expected'];
             foreach ($expected as $key => $value) {
                 if ($key == 'valid') {
@@ -750,5 +750,4 @@ class ClientActionTest extends TestCase
             ),
         );
     }
-
 }

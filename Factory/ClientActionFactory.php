@@ -14,12 +14,12 @@ class ClientActionFactory
      * Client action class name
      * @var string
      */
-    protected $_class = 'Flying\Bundle\ClientActionBundle\Struct\ClientAction';
+    protected $class = 'Flying\Bundle\ClientActionBundle\Struct\ClientAction';
     /**
      * URLs generator to use in client action objects
      * @var UrlGeneratorInterface
      */
-    protected $_generator = null;
+    protected $generator = null;
 
     /**
      * Class constructor
@@ -32,12 +32,12 @@ class ClientActionFactory
     public function __construct($class, UrlGeneratorInterface $urlGenerator = null)
     {
         if ((!class_exists($class, true)) ||
-            (($this->_class !== trim($class, '\\')) && (!is_subclass_of($class, $this->_class)))
+            (($this->class !== trim($class, '\\')) && (!is_subclass_of($class, $this->class)))
         ) {
             throw new \InvalidArgumentException('Invalid client action class name: ' . $class);
         }
-        $this->_class = $class;
-        $this->_generator = $urlGenerator;
+        $this->class = $class;
+        $this->generator = $urlGenerator;
     }
 
     /**
@@ -53,7 +53,7 @@ class ClientActionFactory
      */
     public function create($action, $resource = null, $target = null, array $args = null, array $state = null, array $config = null)
     {
-        $class = $this->_class;
+        $class = $this->class;
         $config = $this->prepareConfig($config);
         $info = array(
             'action' => $action,
@@ -75,7 +75,7 @@ class ClientActionFactory
      */
     public function fromString($ca, array $config = null)
     {
-        $class = $this->_class;
+        $class = $this->class;
         $config = $this->prepareConfig($config);
         return new $class($ca, $config);
     }
@@ -91,8 +91,7 @@ class ClientActionFactory
         if (!is_array($config)) {
             $config = array();
         }
-        $config['url_generator'] = $this->_generator;
+        $config['url_generator'] = $this->generator;
         return $config;
     }
-
 }

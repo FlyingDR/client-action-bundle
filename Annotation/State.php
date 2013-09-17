@@ -19,7 +19,7 @@ class State extends ConfigurationAnnotation
      * Application state class name
      * @var string
      */
-    protected $_class;
+    protected $class;
 
     /**
      * Class constructor
@@ -28,7 +28,7 @@ class State extends ConfigurationAnnotation
      */
     public function __construct(array $values)
     {
-        $this->_class = null;
+        $this->class = null;
         if (isset($values['value'])) {
             $values['class'] = $values['value'];
             unset($values['value']);
@@ -43,7 +43,7 @@ class State extends ConfigurationAnnotation
      */
     public function getClass()
     {
-        return $this->_class;
+        return $this->class;
     }
 
     /**
@@ -54,7 +54,7 @@ class State extends ConfigurationAnnotation
      */
     public function setClass($class)
     {
-        $this->_class = $class;
+        $this->class = $class;
     }
 
     /**
@@ -62,7 +62,7 @@ class State extends ConfigurationAnnotation
      *
      * @return string
      */
-    function getAliasName()
+    public function getAliasName()
     {
         return 'state';
     }
@@ -72,9 +72,8 @@ class State extends ConfigurationAnnotation
      *
      * @return Boolean
      */
-    function allowArray()
+    public function allowArray()
     {
         return false;
     }
-
 }

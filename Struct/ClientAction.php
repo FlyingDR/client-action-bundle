@@ -47,7 +47,8 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
  * Trigger event "eventName" to "#targetId" page element and additional arguments:
  * event:[#targetId]eventName?arg1=value1&arg2=value2
  *
- * Load information from server from "/some/url/path" "#targetId" page element with additional arguments and application state modifications:
+ * Load information from server from "/some/url/path" "#targetId" page element
+ *      with additional arguments and application state modifications:
  * load:[#targetId]/some/url/path?arg1=value1&arg2=value2#param1=value1&param2=value2
  *
  * Load information from URL generated for "my_route" route with state modifications into #targetId target:
@@ -296,5 +297,4 @@ class ClientAction extends Struct
         }
         return true;
     }
-
 }

@@ -26,5 +26,4 @@ class ClientActionExtension extends Extension
             $container->setParameter('client_action.state.nsmap.namespaces', $config['state_nsmap']);
         }
     }
-
 }
