@@ -2,7 +2,7 @@ parameters:
     client_action.action.class: Flying\Bundle\ClientActionBundle\Struct\ClientAction
     client_action.factory.class: Flying\Bundle\ClientActionBundle\Factory\ClientActionFactory
 
-    client_action.state.class: Flying\Struct\StorableStruct
+    client_action.state.class: Flying\Bundle\ClientActionBundle\Struct\State
 
     client_action.state.init_event_listener.class: Flying\Bundle\ClientActionBundle\EventListener\StateInitListener
 

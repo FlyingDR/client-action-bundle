@@ -2,8 +2,8 @@
 
 namespace Flying\Bundle\ClientActionBundle\EventListener;
 
-use Flying\Bundle\ClientActionBundle\Annotation\State;
-use Flying\Struct\StructInterface;
+use Flying\Bundle\ClientActionBundle\Annotation\State as StateAnnotation;
+use Flying\Bundle\ClientActionBundle\Struct\State;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\FilterControllerEvent;
@@ -48,9 +48,9 @@ class StateInitListener implements EventSubscriberInterface
         if (!$configuration) {
             return;
         }
-        if ($configuration instanceof StructInterface) {
+        if ($configuration instanceof State) {
             $state = $configuration;
-        } elseif ($configuration instanceof State) {
+        } elseif ($configuration instanceof StateAnnotation) {
             $class = $configuration->getClass();
         } elseif (is_string($configuration)) {
             $class = $configuration;
@@ -66,10 +66,8 @@ class StateInitListener implements EventSubscriberInterface
                 foreach ($namespaces as $ns) {
                     $fqcn = $ns . '\\' . $sn;
                     if (class_exists($fqcn, true)) {
-                        if (in_array('Flying\Struct\StructInterface', class_implements($fqcn))) {
-                            $class = $fqcn;
-                            break;
-                        }
+                        $class = $fqcn;
+                        break;
                     }
                 }
                 if (!$class) {
@@ -77,6 +75,9 @@ class StateInitListener implements EventSubscriberInterface
                 }
             }
             $state = new $class();
+            if (!$state instanceof State) {
+                throw new \RuntimeException('Application state object must be instance of State');
+            }
         }
         $this->container->set('client_action.state', $state);
     }
@@ -90,5 +91,4 @@ class StateInitListener implements EventSubscriberInterface
             KernelEvents::CONTROLLER => array('onKernelController', -100),
         );
     }
-
 }
