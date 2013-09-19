@@ -372,10 +372,21 @@
         /**
          * Run this client action
          *
-         * @param {Boolean} [normalized]    TRUE if client action is already normalized
+         * @param {Boolean} [normalized]    TRUE if client action is already normalized (can be skipped)
+         * @param {Function|jQuery.Deferred|jQuery.Callbacks} [callback]    Callbacks to call upon loading (can be skipped)
+         * @param {Object} [options]        Options to use (overrides "loading" section of plugin's options)
          */
-        run: function (normalized) {
+        run: function (normalized, callback, options) {
             var ca;
+            if ((normalized !== true) && (normalized !== false)) {
+                options = callback;
+                callback = normalized;
+                normalized = false;
+            }
+            if (!CaLoader.prototype.isCallback(callback)) {
+                options = callback;
+                callback = undefined;
+            }
             if (normalized || false) {
                 ca = this;
             } else {
@@ -410,7 +421,8 @@
                             data = undefined;
                         }
                     }
-                    loadResource({'url': url, 'data': data}, ca.target);
+                    var loader = new CaLoader({'url': url, 'data': data}, callback, options, ca.target);
+                    loader.run();
                     break;
                 case 'event':
                     $(ca.target).trigger(ca.event, ca.args);
@@ -421,6 +433,208 @@
             }
         }
 
+    };
+
+    /**
+     * Load resource by given URL and arguments into given target
+     *
+     * @param {String|Object} url       Either URL to load information from or {url:"url to load",data:"data to send to server"}
+     * @param {Function|jQuery.Deferred|jQuery.Callbacks} [callback]    Callbacks to call upon loading (can be skipped)
+     * @param {Object} [options]        Options to use (overrides "loading" section of plugin's options) (can be skipped)
+     * @param {Node|jQuery} [target]    Target element for applying loading indicator
+     */
+    function CaLoader(url, callback, options, target) {
+        this.url = null;
+        this.target = null;
+        this.options = null;
+        this.init(url, callback, options, target);
+    }
+
+    CaLoader.prototype = {
+        /**
+         * Object initialization
+         *
+         * @param {String|Object} url       Either URL to load information from or {url:"url to load",data:"data to send to server"}
+         * @param {Function|jQuery.Deferred|jQuery.Callbacks} [callback]    Callbacks to call upon loading (can be skipped)
+         * @param {Object} [options]        Options to use (overrides "loading" section of plugin's options) (can be skipped)
+         * @param {Node|jQuery} [target]    Target element for applying loading indicator
+         */
+        init: function (url, callback, options, target) {
+            if ((!this.isCallback(callback)) && (callback !== undefined)) {
+                target = options;
+                options = callback;
+                callback = undefined;
+            }
+            if ((options instanceof Node) || (options instanceof jQuery)) {
+                target = options;
+                options = {};
+            }
+            options = $.extend(true, $.ca('options', 'loading'), options || {});
+            if (this.isCallback(callback)) {
+                options.onload = callback;
+            }
+            if ($.isPlainObject(url)) {
+                if (url.data || false) {
+                    options.ajax.data = url.data;
+                }
+                url = url.url || '';
+            }
+            target = (((target instanceof Node) && (target !== document)) || ((target instanceof jQuery) && (target[0] !== document))) ? $(target) : undefined;
+
+            this.url = url;
+            // Don't assign options directly to avoid overwriting in a case of multiple calls
+            this.options = $.extend(true, {}, options);
+            this.target = target;
+        },
+
+        /**
+         * Run resource loading process
+         *
+         * @returns {*}
+         */
+        run: function () {
+            this.loadingIndicator(true);
+            return($.ajax(this.url, $.extend(true, this.options.ajax, {
+                context: this,
+                success: this.onload,
+                error: this.onerror
+            })));
+        },
+
+        onload: function (data) {
+            if (($.isPlainObject(data)) && (data.responseText || false)) {
+                data = data.responseText;
+            }
+            if (this.target) {
+                // Since $.html() strips out JavaScript code - use $.replaceWith() instead
+                var t = $('<div>');
+                this.target.empty().append(t);
+                t.replaceWith(data);
+            }
+            this.loadingIndicator(false);
+            var cb = this.options.onload;
+            var cbThis = (this.target) ? this.target : $(document);
+            cbThis.trigger('ca.load.completed', data);
+            switch (this.isCallback(cb)) {
+                case 'function':
+                    cb.call(cbThis, data);
+                    break;
+                case 'deferred':
+                    /** @type {jQuery.Deferred} cb */
+                    cb.resolveWith(cbThis, [data]);
+                    break;
+                case 'callbacks':
+                    /** @type {jQuery.Callbacks} cb */
+                    cb.fireWith(cbThis, [data]);
+                    break;
+            }
+        },
+
+        onerror: function (data) {
+            this.loadingIndicator(false);
+            var cb = this.options.onerror;
+            var cbThis = (this.target) ? this.target : $(document);
+            cbThis.trigger('ca.load.error', data);
+            switch (this.isCallback(cb)) {
+                case 'function':
+                    cb.call(cbThis, data);
+                    break;
+                case 'deferred':
+                    /** @type {jQuery.Deferred} cb */
+                    cb.rejectWith(cbThis, [data]);
+                    break;
+                case 'callbacks':
+                    /** @type {jQuery.Callbacks} cb */
+                    cb.fireWith(cbThis, [data]);
+                    break;
+                default:
+                    if (cb !== false) {
+                        var msg = 'Error while loading url "' + url + '"';
+                        if ($.isPlainObject(data)) {
+                            if (data.responseText || false) {       // AJAX error
+                                msg = 'Error while loading url "' + url + '": HTTP ' + data.status + ' ' + data.statusText;
+                                $.error(msg);
+                            }
+                        } else if ($.type(data) === 'string') {
+                            $.error(data);
+                        } else {
+                            $.error(msg);
+                        }
+                    }
+                    break;
+            }
+            // Reject onload $.Deferred object if we get it
+            if (this.isCallback(this.options.onload) == 'deferred') {
+                this.options.onload.rejectWith(cbThis, [data]);
+            }
+        },
+
+        /**
+         * Set loading indicator into given status based on current / given options
+         *
+         * @param {Boolean} status      Loading indicator status
+         */
+        loadingIndicator: function (status) {
+            var options = this.options.indicator;
+            if (status || false) {
+                // Enable indicator
+                if (options.enabled) {
+                    if (($.isPlainObject(options.indicator)) && ($.isFunction(options.indicator.start))) {
+                        $.proxy(options.indicator.start, this.target);
+                    } else if (this.target) {
+                        if (options.loadingClass) {
+                            this.target.addClass(options.loadingClass);
+                        }
+                        if ((options.mask) && ($.fn.mask || false)) {
+                            this.target.mask(($.type(options.mask) == 'string') ? options.mask : '');
+                        }
+                        if ((options.activity) && ($.fn.activity || false)) {
+                            this.target.activity(($.isPlainObject(options.activity)) ? options.activity : {});
+                        }
+                    } else if (($.type(options.indicator) == 'string') || (options.indicator instanceof jQuery)) {
+                        $(options.indicator).show();
+                    }
+                }
+            } else {
+                // Disable indicator
+                if (($.isPlainObject(options.indicator)) && ($.isFunction(options.indicator.stop))) {
+                    $.proxy(options.indicator.stop, this.target);
+                } else if (this.target) {
+                    if ((options.mask) && ($.fn.unmask || false)) {
+                        this.target.unmask();
+                    }
+                    if ((options.activity) && ($.fn.activity || false)) {
+                        this.target.activity(false);
+                    }
+                    if (options.loadingClass) {
+                        this.target.removeClass(options.loadingClass);
+                    }
+                } else if (($.type(options.indicator) == 'string') || (options.indicator instanceof jQuery)) {
+                    $(options.indicator).hide();
+                }
+            }
+        },
+
+
+        /**
+         * Check if given value can be used as callback for resources loading
+         *
+         * @param {*} callback
+         * @returns {string|boolean}
+         */
+        isCallback: function (callback) {
+            if ($.isFunction(callback)) {       // Plain function
+                return('function');
+            }
+            if ($.isPlainObject(callback)) {
+                if ($.isFunction(callback.promise)) {       // $.Deferred object
+                    return('deferred');
+                } else if ($.isFunction(callback.fire)) {   // $.Callbacks object
+                    return('callbacks');
+                }
+            }
+            return(false);
+        }
     };
 
     /**
@@ -504,7 +718,8 @@
          * @param {Object} [options]        Options to use (overrides "loading" section of plugin's options)
          */
         load: function (url, callback, options) {
-            loadResource(url, callback, options);
+            var loader = new CaLoader(url, callback, options);
+            loader.run();
         },
 
         /**
@@ -618,7 +833,8 @@
          */
         load: function (url, callback, options) {
             return this.each(function () {
-                loadResource(url, callback, options, this);
+                var loader = new CaLoader(url, callback, options, this);
+                loader.run();
             });
         }
 
@@ -679,175 +895,6 @@
         }
 
     };
-
-    /**
-     * Set loading indicator into given status based on current / given options
-     *
-     * @param {Boolean} status          Loading indicator status
-     * @param {Object} [options]        Loading indicator options to use ("loading.indicator" section of plugin options)
-     * @param {Node|jQuery} [target]    Target element for applying loading indicator
-     */
-    function loadingIndicator(status, options, target) {
-        options = $.extend(true, $.ca('options', 'loading.indicator'), options || {});
-        target = (((target instanceof Node) || (target instanceof jQuery)) && (target !== document)) ? $(target) : undefined;
-        if (status || false) {
-            // Enable indicator
-            if (options.enabled) {
-                if (($.isPlainObject(options.indicator)) && ($.isFunction(options.indicator.start))) {
-                    $.proxy(options.indicator.start, target);
-                } else if (target) {
-                    if (options.loadingClass) {
-                        target.addClass(options.loadingClass);
-                    }
-                    if ((options.mask) && ($.fn.mask || false)) {
-                        target.mask(($.type(options.mask) == 'string') ? options.mask : '');
-                    }
-                    if ((options.activity) && ($.fn.activity || false)) {
-                        target.activity(($.isPlainObject(options.activity)) ? options.activity : {});
-                    }
-                } else if (($.type(options.indicator) == 'string') || (options.indicator instanceof jQuery)) {
-                    $(options.indicator).show();
-                }
-            }
-        } else {
-            // Disable indicator
-            if (($.isPlainObject(options.indicator)) && ($.isFunction(options.indicator.stop))) {
-                $.proxy(options.indicator.stop, target);
-            } else if (target) {
-                if ((options.mask) && ($.fn.unmask || false)) {
-                    target.unmask();
-                }
-                if ((options.activity) && ($.fn.activity || false)) {
-                    target.activity(false);
-                }
-                if (options.loadingClass) {
-                    target.removeClass(options.loadingClass);
-                }
-            } else if (($.type(options.indicator) == 'string') || (options.indicator instanceof jQuery)) {
-                $(options.indicator).hide();
-            }
-        }
-    }
-
-    /**
-     * Load resource by given URL and arguments into given target
-     *
-     * @param {String|Object} url       Either URL to load information from or {url:"url to load",data:"data to send to server"}
-     * @param {Function|jQuery.Deferred|jQuery.Callbacks} [callback]    Callbacks to call upon loading (can be skipped)
-     * @param {Object} [options]        Options to use (overrides "loading" section of plugin's options) (can be skipped)
-     * @param {Node|jQuery} [target]    Target element for applying loading indicator
-     */
-    function loadResource(url, callback, options, target) {
-        if (!isCallback(callback)) {
-            target = options;
-            options = callback;
-            callback = undefined;
-        }
-        if ((options instanceof Node) || (options instanceof jQuery)) {
-            target = options;
-            options = {};
-        }
-        options = $.extend(true, $.ca('options', 'loading'), options || {});
-        if (isCallback(callback)) {
-            options.onload = callback;
-        }
-        if ($.isPlainObject(url)) {
-            if (url.data || false) {
-                options.ajax.data = url.data;
-            }
-            url = url.url || '';
-        }
-        target = (((target instanceof Node) || (target instanceof jQuery)) && (target !== document)) ? $(target) : undefined;
-
-        var onload = function (data) {
-            if (($.isPlainObject(data)) && (data.responseText || false)) {
-                data = data.responseText;
-            }
-            if (target) {
-                // Since $.html() strips out JavaScript code - use $.replaceWith() instead
-                var t = $('<div>');
-                target.empty().append(t);
-                t.replaceWith(data);
-            }
-            loadingIndicator(false, options.loading, target);
-            var cbThis = (target) ? target : $(document);
-            cbThis.trigger('ca.load.completed', data);
-            switch (isCallback(options.onload)) {
-                case 'function':
-                    options.onload.call(cbThis, data);
-                    break;
-                case 'deferred':
-                    options.onload.resolveWith(cbThis, [data]);
-                    break;
-                case 'callbacks':
-                    options.onload.fireWith(cbThis, [data]);
-                    break;
-            }
-        };
-
-        var onerror = function (data) {
-            loadingIndicator(false, options.loading, target);
-            var cbThis = (target) ? target : $(document);
-            cbThis.trigger('ca.load.error', data);
-            switch (isCallback(options.onerror)) {
-                case 'function':
-                    options.onerror.call(cbThis, data);
-                    break;
-                case 'deferred':
-                    options.onerror.rejectWith(cbThis, [data]);
-                    break;
-                case 'callbacks':
-                    options.onerror.fireWith(cbThis, [data]);
-                    break;
-                default:
-                    if (options.onerror !== false) {
-                        var msg = 'Error while loading url "' + url + '"';
-                        if ($.isPlainObject(data)) {
-                            if (data.responseText || false) {       // AJAX error
-                                msg = 'Error while loading url "' + url + '": HTTP ' + data.status + ' ' + data.statusText;
-                                $.error(msg);
-                            }
-                        } else if ($.type(data) === 'string') {
-                            $.error(data);
-                        } else {
-                            $.error(msg);
-                        }
-                    }
-                    break;
-            }
-            // Reject onload $.Deferred object if we get it
-            if (isCallback(options.onload) == 'deferred') {
-                options.onload.rejectWith(cbThis, [data]);
-            }
-        };
-
-        loadingIndicator(true, options.loading, target);
-        return($.ajax(url, $.extend(true, options.ajax, {
-            'success': onload,
-            'error': onerror
-        })));
-    }
-
-    /**
-     * Check if given value can be used as callback for resources loading
-     *
-     * @param {*} callback
-     * @returns {string|boolean}
-     */
-    function isCallback(callback) {
-        if ($.isFunction(callback)) {       // Plain function
-            return('function');
-        }
-        if ($.isPlainObject(callback)) {
-            if ($.isFunction(callback.promise)) {       // $.Deferred object
-                return('deferred');
-            } else if ($.isFunction(callback.fire)) {   // $.Callbacks object
-                return('callbacks');
-            }
-        }
-        return(false);
-    }
-
     // Expose client action and application state objects in global scope
     // to allow use of "instanceof" and direct object creation
     window.ClientAction = ClientAction;
