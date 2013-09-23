@@ -33,14 +33,41 @@
      * @param {Object} state    Application state
      * @constructor
      */
-    function CaAppState(state) {
+    function CaState(state) {
+        this.state = {};
         if (!$.isPlainObject(state)) {
             state = {};
         }
-        this.state = state;
+        this._fromPlain(state, this.state);
     }
 
-    CaAppState.prototype = {
+    CaState.prototype = {
+        /**
+         * Convert given object from "plain" dotted index notation into normal object
+         *
+         * @param {Object} src
+         * @param {Object} dest
+         * @private
+         */
+        _fromPlain: function (src, dest) {
+            for (var i in src) {
+                var value = src[i];
+                if (i.indexOf('.') != -1) {
+                    var parts = i.split('.');
+                    var index = parts.shift();
+                    var prefix = parts.join('.');
+                    var temp = {};
+                    temp[prefix] = value;
+                    if (dest[index] === undefined) {
+                        dest[index] = {};
+                    }
+                    this._fromPlain(temp, dest[index]);
+                } else {
+                    dest[i] = value;
+                }
+            }
+        },
+
         /**
          * Get application state value
          *
@@ -663,8 +690,8 @@
             if (this.initialized) {
                 return;
             }
-            this._state = new CaAppState(state || {});
-            this._options = new CaAppState(this._options || {});
+            this._state = new CaState(state || {});
+            this._options = new CaState(this._options || {});
             this._options.set(options || {});
             // Setup client actions handlers
             $(document)
@@ -898,7 +925,7 @@
     // Expose client action and application state objects in global scope
     // to allow use of "instanceof" and direct object creation
     window.ClientAction = ClientAction;
-    window.CaAppState = CaAppState;
+    window.CaState = CaState;
 
     var plugin = new Plugin();
 

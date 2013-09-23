@@ -5,6 +5,7 @@ namespace Flying\Bundle\ClientActionBundle\Tests\Struct;
 use Flying\Bundle\ClientActionBundle\Struct\State;
 use Flying\Bundle\ClientActionBundle\Tests\Struct\Fixtures\MultiLevelState;
 use Flying\Bundle\ClientActionBundle\Tests\Struct\Fixtures\SimpleState;
+use Flying\Bundle\ClientActionBundle\Tests\Struct\Fixtures\TestStateInterface;
 use Flying\Tests\TestCase;
 
 class StateTest extends TestCase
@@ -16,12 +17,56 @@ class StateTest extends TestCase
     }
 
     /**
+     * @param string $class
+     * @param array $expected
+     * @dataProvider dpConvertingToClientRepresentation
+     */
+    public function testConvertingToClientRepresentation($class, $expected)
+    {
+        /** @var $state State */
+        $state = new $class();
+        $this->assertEquals($expected, $state->toClient());
+    }
+
+    public function dpConvertingToClientRepresentation()
+    {
+        return array(
+            array(
+                'Flying\Bundle\ClientActionBundle\Tests\Struct\Fixtures\SimpleState',
+                array(
+                    'name'   => 'John',
+                    'age'    => null,
+                    'active' => true,
+                ),
+            ),
+            array(
+                'Flying\Bundle\ClientActionBundle\Tests\Struct\Fixtures\MultiLevelState',
+                array(
+                    'category'                     => 'main',
+                    'selected'                     => array(1, 2, 3),
+                    'sort.column'                  => 'date',
+                    'sort.order'                   => 'desc',
+                    'paginator.page'               => 1,
+                    'paginator.page_size'          => 20,
+                    'synthetic.test'               => 'for',
+                    'synthetic.multiple.structure' => 'levels',
+                ),
+            ),
+        );
+    }
+
+    /**
+     * @param string $class
      * @dataProvider dpReceivingDefaultState
      */
-    public function testReceivingDefaultState()
+    public function testReceivingDefaultState($class)
     {
-        $state = new SimpleState();
-        $this->assertEquals($state->getExpectedDefaults(), $state->getDefaults());
+        $state = new $class();
+        /** @var $state TestStateInterface */
+        $expected = $state->getExpectedDefaults();
+        /** @var $state State */
+        $defaults = $state->getDefaults();
+        $this->assertEquals($expected, $defaults);
     }
 
     public function dpReceivingDefaultState()

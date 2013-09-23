@@ -16,9 +16,9 @@ use Flying\Bundle\ClientActionBundle\Struct\State;
  * @Struct\Int(name="page_size", default=20, min=10)
  * })
  * @Struct\Struct(name="synthetic", {
- * @Struct\String(name="test", value="for"),
+ * @Struct\String(name="test", default="for"),
  * @Struct\Struct(name="multiple", {
- * @Struct\String(name="structure", value="levels")
+ * @Struct\String(name="structure", default="levels")
  *      })
  * })
  */

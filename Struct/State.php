@@ -10,7 +10,7 @@ use Flying\Struct\Struct;
 /**
  * Base class for application state classes
  */
-class State extends StorableStruct
+class State extends StorableStruct implements ClientExportInterface
 {
 
     /**
@@ -20,7 +20,34 @@ class State extends StorableStruct
      */
     public function toClient()
     {
-        return $this->toArray();
+        return $this->structToClient($this);
+    }
+
+    /**
+     * Convert given structure to its client side representation
+     *
+     * @param Struct $struct    Structure to convert
+     * @param string $prefix    OPTIONAL Prefix to prepend to structure's keys
+     * @return array
+     */
+    protected function structToClient(Struct $struct, $prefix = '')
+    {
+        if ((strlen($prefix)) && (substr($prefix, -1) !== '.')) {
+            $prefix .= '.';
+        }
+        $client = array();
+        foreach ($struct as $key => $value) {
+            $property = $struct->getProperty($key);
+            if ($property instanceof ClientExportInterface) {
+                $client[$prefix . $key] = $property->toClient();
+            } elseif ($property instanceof Struct) {
+                $child = $this->structToClient($property, $prefix . $key);
+                $client = array_merge($client, $child);
+            } elseif ($property instanceof Property) {
+                $client[$prefix . $key] = ($value instanceof ComplexPropertyInterface) ? $value->toArray() : $value;
+            }
+        }
+        return $client;
     }
 
     /**
