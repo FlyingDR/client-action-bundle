@@ -750,4 +750,40 @@ class ClientActionTest extends TestCase
             ),
         );
     }
+
+    /**
+     * @param string $value
+     * @param mixed $expected
+     * @dataProvider dpValuesConversion
+     */
+    public function testValuesConversion($value, $expected)
+    {
+        $ca = new ClientAction('state:?arg=' . $value . '#s=' . $value);
+        $this->assertSame($expected, $ca->args['arg']);
+        $this->assertSame($expected, $ca->state['s']);
+        $ca = new ClientAction('state:?arg[test]=' . $value . '#s[test]=' . $value);
+        $a1 = $ca->args['arg'];
+        $a2 = $ca->args['arg']['test'];
+        $this->assertSame($expected, $ca->args['arg']['test']);
+        $this->assertSame($expected, $ca->state['s']['test']);
+    }
+
+    public function dpValuesConversion()
+    {
+        return array(
+            array('null', null),
+            array('true', true),
+            array('false', false),
+            array('12', 12),
+            array('-123', -123),
+            array('0.5', 0.5),
+            array('-0.15', -0.15),
+            array('12.34', 12.34),
+            array('-12.34', -12.34),
+            array('12e3', 12000.0),
+            array('12e-3', 0.012),
+            array('-12.5e-3', -0.0125),
+            array('1a', '1a'),
+        );
+    }
 }

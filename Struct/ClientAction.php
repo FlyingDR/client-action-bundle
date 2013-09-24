@@ -225,7 +225,7 @@ class ClientAction extends Struct
                     $t = array_shift($t);
                     parse_str($t, $p);
                     if ((is_array($p)) && (sizeof($p))) {
-                        $parts['state'] = $p;
+                        $parts['state'] = $this->convertArgsToNativeValues($p);
                     }
                 }
                 if (strpos($action, '?') !== false) {
@@ -234,7 +234,7 @@ class ClientAction extends Struct
                     $t = array_shift($t);
                     parse_str($t, $p);
                     if ((is_array($p)) && (sizeof($p))) {
-                        $parts['args'] = $p;
+                        $parts['args'] = $this->convertArgsToNativeValues($p);
                     }
                 }
                 if (strlen($action)) {
@@ -267,6 +267,54 @@ class ClientAction extends Struct
             }
         }
         return ($parts);
+    }
+
+    /**
+     * Convert values int given array of arguments into native types
+     *
+     * @param array $args
+     * @return array
+     */
+    protected function convertArgsToNativeValues(array $args)
+    {
+        foreach ($args as $key => $value) {
+            if (is_array($value)) {
+                $args[$key] = $this->convertArgsToNativeValues($value);
+            } else {
+                $args[$key] = $this->convertValueToNative($value);
+            }
+        }
+        return $args;
+    }
+
+    /**
+     * Convert given value into native type
+     *
+     * @param mixed $value
+     * @return mixed
+     */
+    protected function convertValueToNative($value)
+    {
+        switch ($value) {
+            case 'null':
+                $value = null;
+                break;
+            case 'true':
+                $value = true;
+                break;
+            case 'false':
+                $value = false;
+                break;
+            default:
+                if (preg_match('/^\-?\d+$/', $value)) {
+                    $value = (int)$value;
+                } elseif (preg_match('/^[-]?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?$/', $value)) {
+                    // Regexp is taken from http://stackoverflow.com/a/6425559/2633956
+                    $value = (float)$value;
+                }
+                break;
+        }
+        return $value;
     }
 
     /**
