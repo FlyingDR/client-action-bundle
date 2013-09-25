@@ -304,7 +304,7 @@
                                     str = false;
                                     break;
                                 default:
-                                    if (str.match(/^\-?[0-9]*\.[0-9]+$/)) {
+                                    if (str.match(/^[-]?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?$/)) {
                                         str = parseFloat(str);
                                     } else if (str.match(/^\-?[0-9]+$/)) {
                                         str = parseInt(str);
