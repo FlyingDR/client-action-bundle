@@ -27,6 +27,8 @@
         "symfony/routing": "~2.2",
         "symfony/event-dispatcher": "~2.2",
         "sensio/framework-extra-bundle": "~2.2",
-        "mockery/mockery": "~0.8"
+        "mockery/mockery": "~0.8",
+        "knplabs/knp-menu": "~2.0@dev",
+        "knplabs/knp-menu-bundle": "~2.0@dev"
     }
 }

@@ -9,6 +9,9 @@ parameters:
     client_action.state.nsmap.class: Flying\Struct\Configuration\NamespacesMap
     client_action.state.nsmap.namespaces: ~
 
+    client_action.menu.factory_extension.class: Flying\Bundle\ClientActionBundle\Menu\Factory\ClientActionExtension
+    client_action.menu.voter.class: Flying\Bundle\ClientActionBundle\Menu\Voter\ClientActionVoter
+
 services:
     client_action.factory:
         class: %client_action.factory.class%
@@ -23,3 +26,14 @@ services:
     client_action.state.nsmap:
         class: %client_action.state.nsmap.class%
         arguments: [%client_action.state.nsmap.namespaces%]
+    client_action.menu.factory_extension:
+        class: %client_action.menu.factory_extension.class%
+        tags:
+            - { name: knp_menu.factory_extension }
+    client_action.menu.voter:
+        class: %client_action.menu.voter.class%
+        arguments: [@client_action.state]
+        tags:
+            - { name: knp_menu.voter, request: true }
+
+
