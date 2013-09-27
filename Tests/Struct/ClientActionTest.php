@@ -100,6 +100,7 @@ class ClientActionTest extends TestCase
                 'array'  => true,
                 'string' => true,
                 'client' => true,
+                'attrs'  => true,
             ),
         ),
 
@@ -117,6 +118,7 @@ class ClientActionTest extends TestCase
                 'array'  => true,
                 'string' => true,
                 'client' => true,
+                'attrs'  => true,
             ),
         ),
 
@@ -138,6 +140,12 @@ class ClientActionTest extends TestCase
                 'array'  => true,
                 'string' => true,
                 'client' => true,
+                'attrs'  => array(
+                    'data-ca-action' => 'event',
+                    'data-ca-event'  => 'myEvent',
+                    'data-ca-target' => '#myTarget',
+                    'data-ca-args'   => 'a=b&amp;c=d',
+                ),
             ),
         ),
 
@@ -159,6 +167,12 @@ class ClientActionTest extends TestCase
                 'array'  => true,
                 'string' => true,
                 'client' => true,
+                'attrs'  => array(
+                    'data-ca-action' => 'event',
+                    'data-ca-event'  => 'myEvent',
+                    'data-ca-target' => '#myTarget',
+                    'data-ca-state'  => 'q=w&amp;x=z',
+                ),
             ),
         ),
 
@@ -184,6 +198,13 @@ class ClientActionTest extends TestCase
                 'array'  => true,
                 'string' => true,
                 'client' => true,
+                'attrs'  => array(
+                    'data-ca-action' => 'event',
+                    'data-ca-event'  => 'myEvent',
+                    'data-ca-target' => '#myTarget',
+                    'data-ca-args'   => 'a=b&amp;c=d',
+                    'data-ca-state'  => 'q=w&amp;x=z',
+                ),
             ),
         ),
 
@@ -200,6 +221,7 @@ class ClientActionTest extends TestCase
                 'array'  => true,
                 'string' => true,
                 'client' => true,
+                'attrs'  => true,
             ),
         ),
 
@@ -217,6 +239,7 @@ class ClientActionTest extends TestCase
                 'array'  => true,
                 'string' => true,
                 'client' => true,
+                'attrs'  => true,
             ),
         ),
 
@@ -238,6 +261,12 @@ class ClientActionTest extends TestCase
                 'array'  => true,
                 'string' => true,
                 'client' => true,
+                'attrs'  => array(
+                    'data-ca-action' => 'load',
+                    'data-ca-url'    => '/some/url',
+                    'data-ca-target' => '#myTarget',
+                    'data-ca-args'   => 'a=b&amp;c=d',
+                ),
             ),
         ),
 
@@ -263,6 +292,13 @@ class ClientActionTest extends TestCase
                 'array'  => true,
                 'string' => true,
                 'client' => true,
+                'attrs'  => array(
+                    'data-ca-action' => 'load',
+                    'data-ca-url'    => '/some/url',
+                    'data-ca-target' => '#myTarget',
+                    'data-ca-args'   => 'a=b&amp;c=d',
+                    'data-ca-state'  => 'q=w&amp;x=z',
+                ),
             ),
         ),
 
@@ -292,6 +328,11 @@ class ClientActionTest extends TestCase
                     'action' => 'load',
                     'target' => '#myTarget',
                     'url'    => '/some/url',
+                ),
+                'attrs'  => array(
+                    'data-ca-action' => 'load',
+                    'data-ca-target' => '#myTarget',
+                    'data-ca-url'    => '/some/url',
                 ),
             ),
         ),
@@ -326,6 +367,12 @@ class ClientActionTest extends TestCase
                         'x' => 'z',
                     ),
                 ),
+                'attrs'  => array(
+                    'data-ca-action' => 'load',
+                    'data-ca-target' => '#myTarget',
+                    'data-ca-url'    => '/generated/url',
+                    'data-ca-state'  => 'q=w&amp;x=z',
+                ),
             ),
         ),
 
@@ -345,6 +392,10 @@ class ClientActionTest extends TestCase
                 'array'  => true,
                 'string' => true,
                 'client' => true,
+                'attrs'  => array(
+                    'data-ca-action' => 'state',
+                    'data-ca-state'  => 'q=w&amp;x=z',
+                ),
             ),
         ),
 
@@ -369,6 +420,10 @@ class ClientActionTest extends TestCase
                 'array'  => true,
                 'string' => true,
                 'client' => true,
+                'attrs'  => array(
+                    'data-ca-action' => 'state',
+                    'data-ca-state'  => 'q=w&amp;x=z',
+                ),
             ),
         ),
 
@@ -394,6 +449,10 @@ class ClientActionTest extends TestCase
                 'array'  => true,
                 'string' => 'state:#n=null&t=true&f=false&s=+str+&ip=123&in=-234&fp=12.34&fn=-23.45',
                 'client' => true,
+                'attrs'  => array(
+                    'data-ca-action' => 'state',
+                    'data-ca-state'  => 'n=null&amp;t=true&amp;f=false&amp;s=+str+&amp;ip=123&amp;in=-234&amp;fp=12.34&amp;fn=-23.45',
+                ),
             ),
         ),
 
@@ -414,7 +473,23 @@ class ClientActionTest extends TestCase
                 'valid'  => true,
                 'array'  => true,
                 'string' => 'state:#a=[1,2,3]&b=[1,abc,null]&c.x=xxx&c.y=yyy&c.z=zzz&x.y.z=xyz&x.q.w=e&x.t=[1,2]',
-                'client' => true,
+                'client' => array(
+                    'action' => 'state',
+                    'state'  => array(
+                        'a'     => array(1, 2, 3),
+                        'b'     => array(1, 'abc', null),
+                        'c.x'   => 'xxx',
+                        'c.y'   => 'yyy',
+                        'c.z'   => 'zzz',
+                        'x.y.z' => 'xyz',
+                        'x.q.w' => 'e',
+                        'x.t'   => array(1, 2),
+                    ),
+                ),
+                'attrs'  => array(
+                    'data-ca-action' => 'state',
+                    'data-ca-state'  => 'a=[1,2,3]&amp;b=[1,abc,null]&amp;c.x=xxx&amp;c.y=yyy&amp;c.z=zzz&amp;x.y.z=xyz&amp;x.q.w=e&amp;x.t=[1,2]',
+                ),
             ),
         ),
     );
@@ -451,7 +526,7 @@ class ClientActionTest extends TestCase
                         }
                         $value = $temp;
                     }
-                    if ($key == 'client') {
+                    if (in_array($key, array('client', 'attrs'))) {
                         $value = $test['source']['array'];
                         if (array_key_exists('action', $value)) {
                             // Filter out client action parameters that are not exported to client side
@@ -471,6 +546,14 @@ class ClientActionTest extends TestCase
                                     break;
                             }
                         }
+                    }
+                    if ($key == 'attrs') {
+                        $temp = array();
+                        /** @var $value array */
+                        foreach ($value as $k => $v) {
+                            $temp['data-ca-' . $k] = $v;
+                        }
+                        $value = $temp;
                     }
                 }
                 $test['expected'][$key] = $value;
@@ -695,6 +778,41 @@ class ClientActionTest extends TestCase
         return $tests;
     }
 
+    /**
+     * @param string $ca
+     * @param array $expected
+     * @param boolean $exception
+     * @dataProvider dataProviderConversionToAttrs
+     */
+    public function testConversionToAttrs($ca, array $expected, $exception = false)
+    {
+        $ca = $this->getTestClientAction($ca);
+        if ($exception) {
+            $this->setExpectedException('\RuntimeException');
+        }
+        $actual = $ca->toAttrs();
+        if (!$exception) {
+            $this->assertEquals($expected, $actual);
+        }
+    }
+
+    public function dataProviderConversionToAttrs()
+    {
+        $tests = array();
+        foreach ($this->getTests() as $test) {
+            $item = array($test['source']['string']);
+            if ($test['expected']['valid']) {
+                $item[] = $test['expected']['attrs'];
+                $item[] = false;
+            } else {
+                $item[] = array();
+                $item[] = true;
+            }
+            $tests[] = $item;
+        }
+        return $tests;
+    }
+
     public function testOnlyValidClientActionsCanBeConvertedToClient()
     {
         $ca = $this->getTestClientAction(array());
@@ -808,8 +926,6 @@ class ClientActionTest extends TestCase
         $this->assertSame($expected, $ca->args['arg']);
         $this->assertSame($expected, $ca->state['s']);
         $ca = new ClientAction('state:?arg[test]=' . $value . '#s[test]=' . $value);
-        $a1 = $ca->args['arg'];
-        $a2 = $ca->args['arg']['test'];
         $this->assertSame($expected, $ca->args['arg']['test']);
         $this->assertSame($expected, $ca->state['s']['test']);
     }

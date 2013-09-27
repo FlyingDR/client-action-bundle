@@ -147,7 +147,32 @@ class ClientAction extends Struct
             }
             return true;
         });
+        foreach (array('args', 'state') as $part) {
+            if (array_key_exists($part, $client)) {
+                $client[$part] = $this->toPlainArray($client[$part]);
+            }
+        }
         return $client;
+    }
+
+    /**
+     * Get client action information as set of HTML attributes
+     *
+     * @throws \RuntimeException
+     * @return array
+     */
+    public function toAttrs()
+    {
+        $attrs = array();
+        $client = $this->toClient();
+        foreach ($client as $name => $value) {
+            $name = 'data-ca-' . $name;
+            if (is_array($value)) {
+                $value = $this->buildQueryString($value);
+            }
+            $attrs[$name] = htmlspecialchars($value);
+        }
+        return $attrs;
     }
 
     /**
