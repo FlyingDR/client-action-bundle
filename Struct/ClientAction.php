@@ -94,10 +94,10 @@ class ClientAction extends Struct
             $result .= $parts['url'];
         }
         if (sizeof($parts['args'])) {
-            $result .= '?' . http_build_query($parts['args']);
+            $result .= '?' . $this->buildQueryString($parts['args']);
         }
         if (sizeof($parts['state'])) {
-            $result .= '#' . http_build_query($parts['state']);
+            $result .= '#' . $this->buildQueryString($parts['state']);
         }
         return $result;
     }
@@ -223,19 +223,13 @@ class ClientAction extends Struct
                     $t = explode('#', $action, 2);
                     $action = array_shift($t);
                     $t = array_shift($t);
-                    parse_str($t, $p);
-                    if ((is_array($p)) && (sizeof($p))) {
-                        $parts['state'] = $this->convertArgsToNativeValues($p);
-                    }
+                    $parts['state'] = $this->parseQueryString($t);
                 }
                 if (strpos($action, '?') !== false) {
                     $t = explode('?', $action, 2);
                     $action = array_shift($t);
                     $t = array_shift($t);
-                    parse_str($t, $p);
-                    if ((is_array($p)) && (sizeof($p))) {
-                        $parts['args'] = $this->convertArgsToNativeValues($p);
-                    }
+                    $parts['args'] = $this->parseQueryString($t);
                 }
                 if (strlen($action)) {
                     if ($parts['action'] == 'event') {
@@ -270,21 +264,121 @@ class ClientAction extends Struct
     }
 
     /**
-     * Convert values int given array of arguments into native types
+     * Parse given query string and return list of arguments
+     * parse_str() is not used because it converts "." into "_"
+     * and doesn't support advanced formatting
      *
-     * @param array $args
+     * @param string $string
      * @return array
      */
-    protected function convertArgsToNativeValues(array $args)
+    protected function parseQueryString($string)
     {
-        foreach ($args as $key => $value) {
-            if (is_array($value)) {
-                $args[$key] = $this->convertArgsToNativeValues($value);
+        $args = array();
+        $parts = explode('&', $string);
+        foreach ($parts as $part) {
+            $part = explode('=', $part, 2);
+            $name = array_shift($part);
+            $value = array_shift($part);
+            $indexes = array();
+            if (strpos($name, '[') !== false) {
+                $temp = explode('[', $name, 2);
+                $name = array_shift($temp);
+                $temp = array_shift($temp);
+                $temp = preg_replace('/\]$/', '', $temp);
+                $indexes = explode('][', $temp);
+            } elseif (strpos($name, '.') !== false) {
+                $indexes = explode('.', $name);
+                $name = array_shift($indexes);
+            }
+            $name = $this->convertValueToNative(urldecode($name));
+            if (preg_match('/^\[(.*?)\]$/', $value, $t)) {
+                $t = explode(',', $t[1]);
+                $value = array();
+                foreach ($t as $v) {
+                    $value[] = $this->convertValueToNative(urldecode($v));
+                }
             } else {
-                $args[$key] = $this->convertValueToNative($value);
+                $value = $this->convertValueToNative(urldecode($value));
+            }
+            if (sizeof($indexes)) {
+                $arg = ((array_key_exists($name, $args)) && (is_array($args[$name]))) ? $args[$name] : array();
+                $a = & $arg;
+                do {
+                    $i = array_shift($indexes);
+                    $i = $this->convertValueToNative(urldecode($i));
+                    if (sizeof($indexes)) {
+                        if ((!array_key_exists($i, $a)) || (!is_array($a[$i]))) {
+                            $a[$i] = array();
+                        }
+                        $a = & $a[$i];
+                    } else {
+                        if ($i !== '') {
+                            $a[$i] = $value;
+                        } else {
+                            $a[] = $value;
+                        }
+                    }
+                } while (sizeof($indexes));
+                $args[$name] = $arg;
+            } else {
+                $args[$name] = $value;
             }
         }
         return $args;
+    }
+
+    /**
+     * Build query string from given list of arguments
+     * http_build_query() is not used because of lack of advanced functionality
+     *
+     * @param array $args
+     * @return string
+     */
+    protected function buildQueryString(array $args)
+    {
+        $query = array();
+        $args = $this->toPlainArray($args);
+        foreach ($args as $name => $value) {
+            if (is_array($value)) {
+                foreach ($value as $k => $v) {
+                    $value[$k] = urlencode($this->convertNativeToString($v));
+                }
+                $value = '[' . join(',', $value) . ']';
+            } else {
+                $value = urlencode($this->convertNativeToString($value));
+            }
+            $query[] = urlencode($name) . '=' . $value;
+        }
+        return join('&', $query);
+    }
+
+    /**
+     * Convert given array into plain array
+     *
+     * @param array $array
+     * @param string $prefix
+     * @return array
+     */
+    protected function toPlainArray(array $array, $prefix = '')
+    {
+        if ((strlen($prefix)) && (substr($prefix, -1) !== '.')) {
+            $prefix .= '.';
+        }
+        $plain = array();
+        foreach ($array as $key => $value) {
+            if (is_array($value)) {
+                $range = range(0, sizeof($value) - 1);
+                if ($range !== array_keys($value)) {
+                    $value = $this->toPlainArray($value, $prefix . $key);
+                    foreach ($value as $k => $v) {
+                        $plain[$k] = $v;
+                    }
+                    continue;
+                }
+            }
+            $plain[$prefix . $key] = $value;
+        }
+        return $plain;
     }
 
     /**
@@ -315,6 +409,25 @@ class ClientAction extends Struct
                 break;
         }
         return $value;
+    }
+
+    /**
+     * Convert given native value into string
+     *
+     * @param mixed $value
+     * @return mixed
+     */
+    protected function convertNativeToString($value)
+    {
+        if ($value === null) {
+            return 'null';
+        } elseif ($value === true) {
+            return 'true';
+        } elseif ($value === false) {
+            return 'false';
+        } else {
+            return (string)$value;
+        }
     }
 
     /**

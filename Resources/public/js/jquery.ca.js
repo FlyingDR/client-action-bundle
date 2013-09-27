@@ -290,53 +290,80 @@
                 // Parse as query string. Code based on http://jsbin.com/adali3/
                 var e,
                     re = /([^&=]+)=?([^&]*)/g,
-                    decode = function (str, value) {
-                        str = decodeURIComponent(str).replace(/\+/g, " ");
-                        if (value) {
-                            switch (str) {
-                                case 'null':
-                                    str = null;
-                                    break;
-                                case 'true':
-                                    str = true;
-                                    break;
-                                case 'false':
-                                    str = false;
-                                    break;
-                                default:
-                                    if (str.match(/^[-]?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?$/)) {
-                                        str = parseFloat(str);
-                                    } else if (str.match(/^\-?[0-9]+$/)) {
-                                        str = parseInt(str);
-                                    }
-                                    break;
-                            }
-                        }
-                        return str;
-                    },
                     query = {};
                 while (e = re.exec(args)) {
-                    if (e[1].indexOf("[") == -1) {
-                        query[decode(e[1])] = decode(e[2], true);
+                    var pn = e[1];
+                    var pv = e[2];
+                    var ind = [], arg, t, i;
+                    if (pn.indexOf('[') !== -1) {
+                        t = pn.split('[');
+                        pn = t.shift();
+                        t = t.join('[').replace(/\]$/, '');
+                        ind = t.split('][');
+                    } else if (pn.indexOf('.') !== -1) {
+                        ind = pn.split('.');
+                        pn = ind.shift();
+                    }
+                    pn = this._decodeArg(pn);
+                    if (t = pv.match(/^\[(.*?)\]$/)) {
+                        t = t[1].split(',');
+                        pv = [];
+                        for (i in t) {
+                            pv.push(this._decodeArg(t[i]));
+                        }
                     } else {
-                        var t = e[1].indexOf("["),
-                            ind = decode(e[1].slice(t + 1, e[1].indexOf("]", t))),
-                            pn = decode(e[1].slice(0, t)),
-                            pv = decode(e[2], true);
-
-                        if (typeof(query[pn]) === 'undefined') {
-                            query[pn] = (ind !== '') ? {} : [];
-                        }
-                        if (query[pn] instanceof Array) {
-                            query[pn].push(pv);
-                        } else {
-                            query[pn][ind] = pv;
-                        }
+                        pv = this._decodeArg(pv);
+                    }
+                    if (ind.length) {
+                        arg = (typeof(query[pn]) !== 'undefined') ? query[pn] : ((ind.join('') === '') ? [] : {});
+                        this._pushIndex(arg, ind, pv);
+                        query[pn] = arg;
+                    } else {
+                        query[pn] = pv;
                     }
                 }
                 args = query;
             }
             return(args);
+        },
+
+        _decodeArg: function (str) {
+            str = decodeURIComponent(str).replace(/\+/g, " ");
+            switch (str) {
+                case 'null':
+                    str = null;
+                    break;
+                case 'true':
+                    str = true;
+                    break;
+                case 'false':
+                    str = false;
+                    break;
+                default:
+                    if (str.match(/^[-]?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?$/)) {
+                        str = parseFloat(str);
+                    } else if (str.match(/^\-?[0-9]+$/)) {
+                        str = parseInt(str);
+                    }
+                    break;
+            }
+            return str;
+        },
+
+        _pushIndex: function (param, indexes, value) {
+            var index = this._decodeArg(indexes.shift());
+            if (indexes.length == 0) {
+                if (param instanceof Array) {
+                    param.push(value);
+                } else {
+                    param[index] = value;
+                }
+            } else {
+                if (typeof(param[index]) === 'undefined') {
+                    param[index] = (indexes[0] !== '') ? {} : [];
+                }
+                this._pushIndex(param[index], indexes, value);
+            }
         },
 
         /**

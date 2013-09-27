@@ -371,6 +371,52 @@ class ClientActionTest extends TestCase
                 'client' => true,
             ),
         ),
+
+        array(
+            'source'   => array(
+                'array'  => array(
+                    'action' => 'state',
+                    'state'  => array(
+                        'n'  => null,
+                        't'  => true,
+                        'f'  => false,
+                        's'  => ' str ',
+                        'ip' => 123,
+                        'in' => -234,
+                        'fp' => 12.34,
+                        'fn' => -23.45,
+                    ),
+                ),
+                'string' => 'state:#n=null&t=true&f=false&s=+str%20&ip=123&in=-234&fp=12.34&fn=-23.45',
+            ),
+            'expected' => array(
+                'valid'  => true,
+                'array'  => true,
+                'string' => 'state:#n=null&t=true&f=false&s=+str+&ip=123&in=-234&fp=12.34&fn=-23.45',
+                'client' => true,
+            ),
+        ),
+
+        array(
+            'source'   => array(
+                'array'  => array(
+                    'action' => 'state',
+                    'state'  => array(
+                        'a' => array(1, 2, 3),
+                        'b' => array(1, 'abc', null),
+                        'c' => array('x' => 'xxx', 'y' => 'yyy', 'z' => 'zzz'),
+                        'x' => array('y' => array('z' => 'xyz'), 'q' => array('w' => 'e'), 't' => array(1, 2)),
+                    ),
+                ),
+                'string' => 'state:#a[]=1&a[]=%32&%61[]=3&b=[1,abc,null]&c[x]=xxx&c[%79]=y%79y&c.z=%7a%7A%7a&x.y.z=xyz&x[q][w]=e&x[t][]=1&x[t][]=2',
+            ),
+            'expected' => array(
+                'valid'  => true,
+                'array'  => true,
+                'string' => 'state:#a=[1,2,3]&b=[1,abc,null]&c.x=xxx&c.y=yyy&c.z=zzz&x.y.z=xyz&x.q.w=e&x.t=[1,2]',
+                'client' => true,
+            ),
+        ),
     );
 
     /**
