@@ -21,12 +21,12 @@ class Configuration implements ConfigurationInterface
         /** @noinspection PhpUndefinedMethodInspection */
         $tb
             ->root('client_action')
-            ->children()
-            ->arrayNode('state_nsmap')
-            ->requiresAtLeastOneElement()
-            ->prototype('scalar')->end()
-            ->end()
-            ->end()
+                ->children()
+                    ->arrayNode('state_nsmap')
+                        ->requiresAtLeastOneElement()
+                        ->prototype('scalar')->end()
+                    ->end()
+                ->end()
             ->end();
 
         return $tb;
