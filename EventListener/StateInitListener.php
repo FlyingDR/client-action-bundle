@@ -4,6 +4,7 @@ namespace Flying\Bundle\ClientActionBundle\EventListener;
 
 use Flying\Bundle\ClientActionBundle\Annotation\State as StateAnnotation;
 use Flying\Bundle\ClientActionBundle\State\State;
+use Flying\Bundle\ClientActionBundle\State\StateSubscriberInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\FilterControllerEvent;
@@ -19,6 +20,11 @@ class StateInitListener implements EventSubscriberInterface
      * @var ContainerInterface
      */
     protected $container;
+    /**
+     * Subscribers to state initialization
+     * @var array
+     */
+    protected $subscribers = array();
 
     /**
      * Constructor
@@ -28,6 +34,19 @@ class StateInitListener implements EventSubscriberInterface
     public function __construct(ContainerInterface $container)
     {
         $this->container = $container;
+        $this->subscribers = array();
+    }
+
+    /**
+     * Register service that wants to receive application state object
+     * as soon as it will be determined
+     *
+     * @param StateSubscriberInterface $subscriber
+     * @return void
+     */
+    public function addStateSubscriber(StateSubscriberInterface $subscriber)
+    {
+        $this->subscribers[] = $subscriber;
     }
 
     /**
@@ -80,6 +99,10 @@ class StateInitListener implements EventSubscriberInterface
             }
         }
         $this->container->set('client_action.state', $state);
+        /** @var $subscriber StateSubscriberInterface */
+        foreach ($this->subscribers as $subscriber) {
+            $subscriber->setState($state);
+        }
     }
 
     /**

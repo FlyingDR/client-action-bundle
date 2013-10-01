@@ -2,6 +2,7 @@
 
 namespace Flying\Bundle\ClientActionBundle\Menu\Voter;
 
+use Flying\Bundle\ClientActionBundle\State\StateSubscriberInterface;
 use Flying\Bundle\ClientActionBundle\Struct\ClientAction;
 use Flying\Bundle\ClientActionBundle\State\State;
 use Knp\Menu\ItemInterface;
@@ -12,22 +13,34 @@ use Symfony\Component\HttpFoundation\Request;
 /**
  * Voter for client action menu items for Knp Menu
  */
-class ClientActionVoter implements VoterInterface
+class ClientActionVoter implements VoterInterface, StateSubscriberInterface
 {
     /**
      * Client-side representation of current application state
-     * @var array
+     * @var State
      */
     protected $state;
+    /**
+     * Cached representation of client state as array
+     * @var array
+     */
+    protected $stateArray = null;
 
     /**
-     * Constructor
-     *
-     * @param State $state     Current application state
+     * {@inheritdoc}
      */
-    public function __construct(State $state)
+    public function setState(State $state)
     {
-        $this->state = $state->toClient();
+        $this->state = $state;
+        $this->stateArray = null;
+    }
+
+    protected function getStateArray()
+    {
+        if (!is_array($this->stateArray)) {
+            $this->stateArray = $this->state->toClient();
+        }
+        return $this->stateArray;
     }
 
     /**
@@ -51,9 +64,10 @@ class ClientActionVoter implements VoterInterface
         if (!array_key_exists('state', $ca)) {
             return null;
         }
+        $state = $this->getStateArray();
         $matched = true;
         foreach ($ca['state'] as $name => $value) {
-            if (array_key_exists($name, $this->state)) {
+            if (array_key_exists($name, $state)) {
                 if (is_array($value)) {
                     if (range(0, sizeof($value) - 1) === array_keys($value)) {
                         sort($value);
@@ -61,7 +75,7 @@ class ClientActionVoter implements VoterInterface
                         asort($value);
                     }
                 }
-                $sv = $this->state[$name];
+                $sv = $state[$name];
                 if (is_array($sv)) {
                     if (range(0, sizeof($sv) - 1) === array_keys($sv)) {
                         sort($sv);

@@ -2,7 +2,7 @@ parameters:
     client_action.action.class: Flying\Bundle\ClientActionBundle\Struct\ClientAction
     client_action.factory.class: Flying\Bundle\ClientActionBundle\Factory\ClientActionFactory
 
-    client_action.state.init_event_listener.class: Flying\Bundle\ClientActionBundle\EventListener\StateInitListener
+    client_action.state.initializer.class: Flying\Bundle\ClientActionBundle\EventListener\StateInitListener
 
     client_action.state.nsmap.class: Flying\Struct\Configuration\NamespacesMap
     client_action.state.nsmap.namespaces: ~
@@ -16,8 +16,8 @@ services:
         arguments: [%client_action.action.class%, @?router]
     client_action.state:
         synthetic: true
-    client_action.state.init_event_listener:
-        class: %client_action.state.init_event_listener.class%
+    client_action.state.initializer:
+        class: %client_action.state.initializer.class%
         arguments: [@service_container]
         tags:
             - { name: kernel.event_subscriber }
@@ -33,5 +33,4 @@ services:
         arguments: [@client_action.state]
         tags:
             - { name: knp_menu.voter, request: true }
-
-
+            - { name: client_action.state.subscriber }

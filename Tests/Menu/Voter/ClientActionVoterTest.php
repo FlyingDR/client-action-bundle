@@ -111,7 +111,9 @@ class ClientActionVoterTest extends TestCase
         if (!$state) {
             $state = new State();
         }
-        return new ClientActionVoter($state);
+        $voter = new ClientActionVoter();
+        $voter->setState($state);
+        return $voter;
     }
 
     /**
