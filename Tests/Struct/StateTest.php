@@ -2,7 +2,7 @@
 
 namespace Flying\Bundle\ClientActionBundle\Tests\Struct;
 
-use Flying\Bundle\ClientActionBundle\Struct\State;
+use Flying\Bundle\ClientActionBundle\State\State;
 use Flying\Bundle\ClientActionBundle\Tests\Struct\Fixtures\MultiLevelState;
 use Flying\Bundle\ClientActionBundle\Tests\Struct\Fixtures\SimpleState;
 use Flying\Bundle\ClientActionBundle\Tests\Struct\Fixtures\TestStateInterface;

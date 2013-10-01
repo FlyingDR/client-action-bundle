@@ -1,6 +1,6 @@
 <?php
 
-namespace Flying\Bundle\ClientActionBundle\Struct;
+namespace Flying\Bundle\ClientActionBundle\State;
 
 use Flying\Struct\Common\ComplexPropertyInterface;
 use Flying\Struct\Property\Property;

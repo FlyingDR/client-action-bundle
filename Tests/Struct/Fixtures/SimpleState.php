@@ -2,7 +2,7 @@
 
 namespace Flying\Bundle\ClientActionBundle\Tests\Struct\Fixtures;
 
-use Flying\Bundle\ClientActionBundle\Struct\State;
+use Flying\Bundle\ClientActionBundle\State\State;
 
 /**
  * @Struct\String(name="name", default="John")

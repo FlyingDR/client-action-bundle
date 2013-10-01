@@ -4,7 +4,7 @@ namespace Flying\Bundle\ClientActionBundle\Tests\Menu\Voter;
 use Flying\Bundle\ClientActionBundle\Menu\Factory\ClientActionExtension;
 use Flying\Bundle\ClientActionBundle\Menu\Voter\ClientActionVoter;
 use Flying\Bundle\ClientActionBundle\Struct\ClientAction;
-use Flying\Bundle\ClientActionBundle\Struct\State;
+use Flying\Bundle\ClientActionBundle\State\State;
 use Flying\Bundle\ClientActionBundle\Tests\Struct\Fixtures\MultiLevelState;
 use Flying\Bundle\ClientActionBundle\Tests\Struct\Fixtures\SimpleState;
 use Flying\Bundle\ClientActionBundle\Tests\TestCase;

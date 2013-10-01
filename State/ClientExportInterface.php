@@ -1,6 +1,6 @@
 <?php
 
-namespace Flying\Bundle\ClientActionBundle\Struct;
+namespace Flying\Bundle\ClientActionBundle\State;
 
 /**
  * Interface for structure components that supports

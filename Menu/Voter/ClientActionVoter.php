@@ -3,7 +3,7 @@
 namespace Flying\Bundle\ClientActionBundle\Menu\Voter;
 
 use Flying\Bundle\ClientActionBundle\Struct\ClientAction;
-use Flying\Bundle\ClientActionBundle\Struct\State;
+use Flying\Bundle\ClientActionBundle\State\State;
 use Knp\Menu\ItemInterface;
 use Knp\Menu\Matcher\Voter\VoterInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;

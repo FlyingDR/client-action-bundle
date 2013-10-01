@@ -3,7 +3,7 @@
 namespace Flying\Bundle\ClientActionBundle\EventListener;
 
 use Flying\Bundle\ClientActionBundle\Annotation\State as StateAnnotation;
-use Flying\Bundle\ClientActionBundle\Struct\State;
+use Flying\Bundle\ClientActionBundle\State\State;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\FilterControllerEvent;
