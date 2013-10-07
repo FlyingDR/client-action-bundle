@@ -461,10 +461,10 @@ class ClientActionTest extends TestCase
                 'array'  => array(
                     'action' => 'state',
                     'state'  => array(
-                        'a' => array(1, 2, 3),
+                        'a' => array(1, '2', 3),
                         'b' => array(1, 'abc', null),
                         'c' => array('x' => 'xxx', 'y' => 'yyy', 'z' => 'zzz'),
-                        'x' => array('y' => array('z' => 'xyz'), 'q' => array('w' => 'e'), 't' => array(1, 2)),
+                        'x' => array('y' => array('z' => 'xyz'), 'q' => array('w' => 'e'), 't' => array(1, '2')),
                     ),
                 ),
                 'string' => 'state:#a[]=1&a[]=%32&%61[]=3&b=[1,abc,null]&c[x]=xxx&c[%79]=y%79y&c.z=%7a%7A%7a&x.y.z=xyz&x[q][w]=e&x[t][]=1&x[t][]=2',
@@ -472,6 +472,59 @@ class ClientActionTest extends TestCase
             'expected' => array(
                 'valid'  => true,
                 'array'  => true,
+                'string' => 'state:#a=[1,2,3]&b=[1,abc,null]&c.x=xxx&c.y=yyy&c.z=zzz&x.y.z=xyz&x.q.w=e&x.t=[1,2]',
+                'client' => array(
+                    'action' => 'state',
+                    'state'  => array(
+                        'a'     => array(1, 2, 3),
+                        'b'     => array(1, 'abc', null),
+                        'c.x'   => 'xxx',
+                        'c.y'   => 'yyy',
+                        'c.z'   => 'zzz',
+                        'x.y.z' => 'xyz',
+                        'x.q.w' => 'e',
+                        'x.t'   => array(1, 2),
+                    ),
+                ),
+                'attrs'  => array(
+                    'data-ca-action' => 'state',
+                    'data-ca-state'  => 'a=[1,2,3]&amp;b=[1,abc,null]&amp;c.x=xxx&amp;c.y=yyy&amp;c.z=zzz&amp;x.y.z=xyz&amp;x.q.w=e&amp;x.t=[1,2]',
+                ),
+            ),
+        ),
+
+        array(
+            'source'   => array(
+                'array'  => array(
+                    'action' => 'state',
+                    'state'  => array(
+                        'a'     => array(1, 2, '3'),
+                        'b'     => array(1, 'abc', 'null'),
+                        'c.x'   => 'xxx',
+                        'c.y'   => 'yyy',
+                        'c.z'   => 'zzz',
+                        'x.y.z' => 'xyz',
+                        'x.q.w' => 'e',
+                        'x.t'   => array(1, 2),
+                    ),
+                ),
+                'string' => 'state:#a[]=1&a[]=%32&%61[]=3&b=[1,abc,null]&c[x]=xxx&c[%79]=y%79y&c.z=%7a%7A%7a&x.y.z=xyz&x[q][w]=e&x[t][]=1&x[t][]=2',
+            ),
+            'expected' => array(
+                'valid'  => true,
+                'array'  => array(
+                    'action' => 'state',
+                    'target' => null,
+                    'event'  => null,
+                    'url'    => null,
+                    'args'   => array(),
+                    'state'  => array(
+                        'a' => array(1, 2, 3),
+                        'b' => array(1, 'abc', null),
+                        'c' => array('x' => 'xxx', 'y' => 'yyy', 'z' => 'zzz'),
+                        'x' => array('y' => array('z' => 'xyz'), 'q' => array('w' => 'e'), 't' => array(1, 2)),
+                    ),
+                ),
                 'string' => 'state:#a=[1,2,3]&b=[1,abc,null]&c.x=xxx&c.y=yyy&c.z=zzz&x.y.z=xyz&x.q.w=e&x.t=[1,2]',
                 'client' => array(
                     'action' => 'state',

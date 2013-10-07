@@ -59,8 +59,8 @@ class ClientAction extends Struct
     /**
      * Class constructor
      *
-     * @param string|array|ClientAction $ca    OPTIONAL Client action information
-     * @param array|object $config             OPTIONAL Configuration options
+     * @param string|array|ClientAction $ca OPTIONAL Client action information
+     * @param array|object $config          OPTIONAL Configuration options
      * @return ClientAction
      */
     public function __construct($ca = null, $config = null)
@@ -199,7 +199,7 @@ class ClientAction extends Struct
     /**
      * Get copy of this client action object with given modifications applied
      *
-     * @param array $modifications      Modifications for client action to apply
+     * @param array $modifications Modifications for client action to apply
      * @return ClientAction
      */
     public function getModified(array $modifications)
@@ -222,7 +222,7 @@ class ClientAction extends Struct
     /**
      * Parse given client action information
      *
-     * @param string|array|ClientAction $action     Client action information to parse
+     * @param string|array|ClientAction $action Client action information to parse
      * @throws \InvalidArgumentException
      * @return array
      */
@@ -266,19 +266,21 @@ class ClientAction extends Struct
             } else {
                 $parts['action'] = $action;
             }
-        } else {
-            if ($action instanceof ClientAction) {
-                $action = $action->toArray();
-            }
-            if (is_array($action)) {
-                foreach ($action as $name => $value) {
-                    if (array_key_exists($name, $parts)) {
-                        $parts[$name] = $value;
-                    }
+        } elseif ($action instanceof ClientAction) {
+            $parts = $action->toArray();
+        } elseif (is_array($action)) {
+            foreach ($action as $name => $value) {
+                if (!array_key_exists($name, $parts)) {
+                    continue;
                 }
-            } else {
-                throw new \InvalidArgumentException('Given client action information is not recognized');
+                if (is_array($value)) {
+                    $parts[$name] = $this->fromPlainArray($value);
+                } else {
+                    $parts[$name] = $this->convertValueToNative($value);
+                }
             }
+        } else {
+            throw new \InvalidArgumentException('Given client action information is not recognized');
         }
         foreach (array('args', 'state') as $part) {
             if (!is_array($parts[$part])) {
@@ -378,6 +380,38 @@ class ClientAction extends Struct
     }
 
     /**
+     * Convert given array from plain array with dotted keys notation into normal array
+     *
+     * @param array $array
+     * @return array
+     */
+    protected function fromPlainArray(array $array)
+    {
+        $result = array();
+        foreach ($array as $name => $value) {
+            $target = & $result;
+            $parts = explode('.', $name);
+            do {
+                $part = array_shift($parts);
+                if ((!array_key_exists($part, $target)) || (!is_array($target[$part]))) {
+                    $target[$part] = array();
+                }
+                if (sizeof($parts)) {
+                    $target = & $target[$part];
+                } else {
+                    if (is_array($value)) {
+                        array_walk_recursive($value, array($this, 'convertValueToNativeRef'));
+                    } else {
+                        $value = $this->convertValueToNative($value);
+                    }
+                    $target[$part] = $value;
+                }
+            } while (sizeof($parts));
+        }
+        return $result;
+    }
+
+    /**
      * Convert given array into plain array
      *
      * @param array $array
@@ -414,26 +448,31 @@ class ClientAction extends Struct
      */
     protected function convertValueToNative($value)
     {
-        switch ($value) {
-            case 'null':
-                $value = null;
-                break;
-            case 'true':
-                $value = true;
-                break;
-            case 'false':
-                $value = false;
-                break;
-            default:
-                if (preg_match('/^\-?\d+$/', $value)) {
-                    $value = (int)$value;
-                } elseif (preg_match('/^[-]?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?$/', $value)) {
-                    // Regexp is taken from http://stackoverflow.com/a/6425559/2633956
-                    $value = (float)$value;
-                }
-                break;
+        if ($value==='null') {
+            $value = null;
+        } elseif ($value==='true') {
+            $value = true;
+        } elseif ($value === 'false') {
+            $value = false;
+        } elseif (preg_match('/^\-?\d+$/', $value)) {
+            $value = (int)$value;
+        } elseif (preg_match('/^[-]?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?$/', $value)) {
+            // Regexp is taken from http://stackoverflow.com/a/6425559/2633956
+            $value = (float)$value;
         }
         return $value;
+    }
+
+    /**
+     * Alias of convertValueToNative() but with $value passed by reference
+     * Required because $this can't be passed to closures in PHP 5.3.x
+     *
+     * @param mixed $value
+     * @return void
+     */
+    protected function convertValueToNativeRef(&$value)
+    {
+        $value = $this->convertValueToNative($value);
     }
 
     /**
