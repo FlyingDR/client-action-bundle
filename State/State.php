@@ -118,4 +118,22 @@ class State extends StorableStruct implements ClientExportInterface
         }
         return $modifications;
     }
+
+    /**
+     * Perform "lazy initialization" of configuration option with given name
+     *
+     * @param string $name Configuration option name
+     * @return mixed
+     */
+    protected function lazyConfigInit($name)
+    {
+        switch ($name) {
+            case 'explicit_metadata_class':
+                // App.state structures should have at least base functionality of app.state
+                return __CLASS__;
+            default:
+                return parent::lazyConfigInit($name);
+                break;
+        }
+    }
 }
