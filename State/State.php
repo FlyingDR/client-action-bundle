@@ -38,11 +38,11 @@ class State extends StorableStruct implements ClientExportInterface
         $client = array();
         foreach ($struct as $key => $value) {
             $property = $struct->getProperty($key);
-            if ($property instanceof ClientExportInterface) {
-                $client[$prefix . $key] = $property->toClient();
-            } elseif ($property instanceof Struct) {
+            if ($property instanceof Struct) {
                 $child = $this->structToClient($property, $prefix . $key);
                 $client = array_merge($client, $child);
+            } elseif ($property instanceof ClientExportInterface) {
+                $client[$prefix . $key] = $property->toClient();
             } elseif ($property instanceof Property) {
                 $client[$prefix . $key] = ($value instanceof ComplexPropertyInterface) ? $value->toArray() : $value;
             }
