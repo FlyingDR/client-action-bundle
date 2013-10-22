@@ -1,2 +1,10 @@
+# Autodetect text files
 * text=auto
-composer.lock text eol=lf
+
+# Definitively text files
+*.php text
+*.js text
+*.yml text
+*.json text
+*.md text
+composer.lock text
