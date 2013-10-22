@@ -1,60 +1,24 @@
 <?php
 
-namespace Flying\Bundle\ClientActionBundle\Struct;
+namespace Flying\Bundle\ClientActionBundle\ClientAction;
 
 use Flying\Struct\Common\ComplexPropertyInterface;
 use Flying\Struct\Configuration;
 use Flying\Struct\Property\Collection;
 use Flying\Struct\Struct;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 /**
  * Client action information structure
  *
  * @property string $action         Client action to perform
- * @property string $target         jQuery selector for action target
- * @property string $event          Event to trigger as action
- * @property string $url            URL or route name to load from server as action
- * @property Collection $args       Additional arguments to pass along with event or URL
- * @property Collection $state      Changes to application state object to apply
+ * @property string $target         CSS selector for action target
+ * @property Collection $args       Additional arguments for client action
  *
- * @Struct\Enum(name="action", values={"load","event","state"}, default="event", nullable=false)
+ * @Struct\String(name="action", nullable=false)
  * @Struct\String(name="target", nullable=true)
- * @Struct\String(name="event", nullable=true)
- * @Struct\String(name="url", nullable=true)
  * @Struct\Collection(name="args")
- * @Struct\Collection(name="state")
- *
- * Client action can be defined as URI-like form:
- *
- * [action ":"] ["[" target "]"]? [url | route]? ["?" args]? ["#" state]?
- *
- * See examples about details of format:
- *
- * Set application state object properties:
- * state:?param1=value1&param2=value2
- * state:#param1=value1&param2=value2
- *
- * Trigger event "eventName":
- * event:eventName
- *
- * Trigger event "eventName" with specified additional arguments:
- * event:eventName?arg1=value1&arg2=value2
- *
- * Trigger event "eventName" with additional arguments and applied modifications to application state:
- * event:eventName?arg1=value1&arg2=value2#param1=value1&param2=value2
- *
- * Trigger event "eventName" to "#targetId" page element and additional arguments:
- * event:[#targetId]eventName?arg1=value1&arg2=value2
- *
- * Load information from server from "/some/url/path" "#targetId" page element
- *      with additional arguments and application state modifications:
- * load:[#targetId]/some/url/path?arg1=value1&arg2=value2#param1=value1&param2=value2
- *
- * Load information from URL generated for "my_route" route with state modifications into #targetId target:
- * load:[#targetId]my_route#param1=value1&param2=value2
  */
-class ClientAction extends Struct
+abstract class ClientAction extends Struct
 {
     /**
      * Class constructor
@@ -88,19 +52,19 @@ class ClientAction extends Struct
         if ($parts['target']) {
             $result .= '[' . $parts['target'] . ']';
         }
-        if ($parts['action'] == 'event') {
-            $result .= $parts['event'];
-        } else {
-            $result .= $parts['url'];
-        }
+        $result .= $this->actionToString();
         if (sizeof($parts['args'])) {
             $result .= '?' . $this->buildQueryString($parts['args']);
         }
-        if (sizeof($parts['state'])) {
-            $result .= '#' . $this->buildQueryString($parts['state']);
-        }
         return $result;
     }
+
+    /**
+     * Convert client action contents to string representation
+     *
+     * @return string
+     */
+    abstract protected function actionToString();
 
     /**
      * Get client action information suitable to pass to client side of application
@@ -114,43 +78,14 @@ class ClientAction extends Struct
             throw new \RuntimeException('Only valid client actions can be rendered to their client representation');
         }
         $parts = $this->toArray();
-        switch ($parts['action']) {
-            case 'load':
-                unset($parts['event']);
-                if (strpos($parts['url'], '/') === false) {
-                    // Render route name into URL
-                    /** @var $generator UrlGeneratorInterface */
-                    $generator = $this->getConfig('url_generator');
-                    if (!$generator) {
-                        throw new \RuntimeException('URL generator service should be provided to allow handling routes in client actions');
-                    }
-                    $parts['url'] = $generator->generate($parts['url'], $parts['args']);
-                    unset($parts['args']);
-                }
-                break;
-            case 'event':
-                unset($parts['url']);
-                break;
-            case 'state':
-                unset($parts['target']);
-                unset($parts['event']);
-                unset($parts['url']);
-                unset($parts['args']);
-                if (!sizeof($parts['state'])) {
-                    throw new \RuntimeException('Client action for state modification should include modification information');
-                }
-                break;
-        }
         $client = array_filter($parts, function ($v) {
             if (($v === null) || (is_array($v)) && (!sizeof($v))) {
                 return false;
             }
             return true;
         });
-        foreach (array('args', 'state') as $part) {
-            if (array_key_exists($part, $client)) {
-                $client[$part] = $this->toPlainArray($client[$part]);
-            }
+        if (array_key_exists('args', $client)) {
+            $client['args'] = $this->toPlainArray($client['args']);
         }
         return $client;
     }
@@ -180,21 +115,7 @@ class ClientAction extends Struct
      *
      * @return boolean
      */
-    public function isValid()
-    {
-        switch ($this->action) {
-            case 'event':
-                return (boolean)strlen($this->event);
-                break;
-            case 'load':
-                return (boolean)strlen($this->url);
-                break;
-            case 'state':
-                return (boolean)sizeof($this->state);
-                break;
-        }
-        return true;
-    }
+    abstract public function isValid();
 
     /**
      * Get copy of this client action object with given modifications applied
@@ -233,6 +154,7 @@ class ClientAction extends Struct
         foreach ($keys as $key) {
             $parts[$key] = null;
         }
+        $parts = $this->preParse($action, $parts);
         if (is_string($action)) {
             if (strpos($action, ':') !== false) {
                 $t = explode(':', $action, 2);
@@ -244,24 +166,14 @@ class ClientAction extends Struct
                     }
                     $action = $t[2];
                 }
-                if (strpos($action, '#') !== false) {
-                    $t = explode('#', $action, 2);
-                    $action = array_shift($t);
-                    $t = array_shift($t);
-                    $parts['state'] = $this->parseQueryString($t);
-                }
                 if (strpos($action, '?') !== false) {
-                    $t = explode('?', $action, 2);
-                    $action = array_shift($t);
-                    $t = array_shift($t);
-                    $parts['args'] = $this->parseQueryString($t);
+                    $t = explode('?', $action);
+                    $args = array_pop($t);
+                    $action = join('?', $t);
+                    $parts['args'] = $this->parseQueryString($args);
                 }
                 if (strlen($action)) {
-                    if ($parts['action'] == 'event') {
-                        $parts['event'] = $action;
-                    } else {
-                        $parts['url'] = $action;
-                    }
+                    $parts['contents'] = $action;
                 }
             } else {
                 $parts['action'] = $action;
@@ -282,12 +194,34 @@ class ClientAction extends Struct
         } else {
             throw new \InvalidArgumentException('Given client action information is not recognized');
         }
-        foreach (array('args', 'state') as $part) {
-            if (!is_array($parts[$part])) {
-                $parts[$part] = array();
-            }
-        }
+        $parts = $this->postParse($parts);
         return ($parts);
+    }
+
+    /**
+     * Perform pre-parsing of given client action information into given parts structure
+     *
+     * @param string|array|ClientAction $action Client action information to parse
+     * @param array $parts
+     * @return array
+     */
+    protected function preParse(&$action, $parts)
+    {
+        return $parts;
+    }
+
+    /**
+     * Perform pre-parsing of given client action parts information structure
+     *
+     * @param array $parts
+     * @return array
+     */
+    protected function postParse($parts)
+    {
+        if ((array_key_exists('args', $parts)) && (!is_array($parts['args']))) {
+            $parts['args'] = array();
+        }
+        return $parts;
     }
 
     /**
@@ -301,6 +235,9 @@ class ClientAction extends Struct
     protected function parseQueryString($string)
     {
         $args = array();
+        if (!strlen($string)) {
+            return $args;
+        }
         $parts = explode('&', $string);
         foreach ($parts as $part) {
             $part = explode('=', $part, 2);
@@ -448,17 +385,18 @@ class ClientAction extends Struct
      */
     protected function convertValueToNative($value)
     {
-        if ($value==='null') {
+        if ($value === 'null') {
             $value = null;
-        } elseif ($value==='true') {
+        } elseif ($value === 'true') {
             $value = true;
         } elseif ($value === 'false') {
             $value = false;
         } elseif (preg_match('/^\-?\d+$/', $value)) {
             $value = (int)$value;
-        } elseif (preg_match('/^[-]?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?$/', $value)) {
-            // Regexp is taken from http://stackoverflow.com/a/6425559/2633956
-            $value = (float)$value;
+        } elseif ($temp = filter_var($value, FILTER_VALIDATE_INT)) {
+            $value = $temp;
+        } elseif ($temp = filter_var($value, FILTER_VALIDATE_FLOAT)) {
+            $value = $temp;
         }
         return $value;
     }
@@ -492,34 +430,5 @@ class ClientAction extends Struct
         } else {
             return (string)$value;
         }
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    protected function initConfig()
-    {
-        parent::initConfig();
-        $this->mergeConfig(array(
-            'url_generator' => null, // URL generator to use to generate URLs by given route names
-        ));
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    protected function validateConfig($name, &$value)
-    {
-        switch ($name) {
-            case 'url_generator':
-                if (($value !== null) && (!$value instanceof UrlGeneratorInterface)) {
-                    throw new \InvalidArgumentException('URL generator object must be instance of UrlGeneratorInterface');
-                }
-                break;
-            default:
-                return parent::validateConfig($name, $value);
-                break;
-        }
-        return true;
     }
 }

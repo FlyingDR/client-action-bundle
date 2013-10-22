@@ -2,96 +2,95 @@
 
 namespace Flying\Bundle\ClientActionBundle\Factory;
 
-use Flying\Bundle\ClientActionBundle\Struct\ClientAction;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Flying\Bundle\ClientActionBundle\ClientAction\ClientAction;
 
 /**
  * Factory for creating client action objects
+ *
+ * Client action can be defined as URI-like form:
+ *
+ * [action ":"] ["[" target "]"]? [content]? ["?" args]? ["#" state]?
+ *
+ * See examples about details of format:
+ *
+ * Set application state object properties:
+ * state:?param1=value1&param2=value2
+ * state:toggle?collection=value
+ *
+ * Trigger event "eventName":
+ * event:eventName
+ *
+ * Trigger event "eventName" with specified additional arguments:
+ * event:eventName?arg1=value1&arg2=value2
+ *
+ * Trigger event "eventName" to "#targetId" page element and additional arguments:
+ * event:[#targetId]eventName?arg1=value1&arg2=value2
+ *
+ * Load information from server from "/some/url/path" using GET method into "#targetId" page element with additional arguments:
+ * load:[#targetId]{method:GET}/some/url/path?arg1=value1&arg2=value2
+ *
+ * Load information from URL generated for "my_route" route with additional arguments into #targetId target:
+ * load:[#targetId]my_route?param1=value1&param2=value2
  */
 class ClientActionFactory
 {
     /**
-     * Client action class name
-     * @var string
+     * List of registered client action classes
+     * @var array
      */
-    protected $class = 'Flying\Bundle\ClientActionBundle\Struct\ClientAction';
-    /**
-     * URLs generator to use in client action objects
-     * @var UrlGeneratorInterface
-     */
-    protected $generator = null;
+    protected $actions = array();
 
     /**
      * Class constructor
+     */
+    public function __construct()
+    {
+        $this->actions = array();
+    }
+
+    /**
+     * Register client action type
      *
-     * @param string $class                         Client action class name
-     * @param UrlGeneratorInterface $urlGenerator   URLs generator to use in client action objects
+     * @param ClientAction $action  Reference implementation of client action of given type
+     * @param string $type          OPTIONAL Client action type
+     * @return void
+     */
+    public function registerAction(ClientAction $action, $type)
+    {
+        $this->actions[strtolower($type)] = $action;
+    }
+
+    /**
+     * Create client action object by given information
+     *
+     * @param string|array|ClientAction $info   Client action information to use to create new client action
+     * @param array $config                     OPTIONAL Configuration options for new client action object
      * @throws \InvalidArgumentException
-     * @return ClientActionFactory
-     */
-    public function __construct($class, UrlGeneratorInterface $urlGenerator = null)
-    {
-        if ((!class_exists($class, true)) ||
-            (($this->class !== trim($class, '\\')) && (!is_subclass_of($class, $this->class)))
-        ) {
-            throw new \InvalidArgumentException('Invalid client action class name: ' . $class);
-        }
-        $this->class = $class;
-        $this->generator = $urlGenerator;
-    }
-
-    /**
-     * Create client action object by given arguments
-     *
-     * @param string $action        Client action to perform
-     * @param string $resource      OPTIONAL Resource for client action (event name, url or route name)
-     * @param string $target        OPTIONAL jQuery selector for action target
-     * @param array $args           OPTIONAL Additional arguments to pass along with event or URL
-     * @param array $state          OPTIONAL Changes to application state object to apply
-     * @param array $config         OPTIONAL Configuration options for this client action
      * @return ClientAction
      */
-    public function create($action, $resource = null, $target = null, array $args = null, array $state = null, array $config = null)
+    public function create($info, array $config = null)
     {
-        $class = $this->class;
-        $config = $this->prepareConfig($config);
-        $info = array(
-            'action' => $action,
-            'target' => $target,
-            'event'  => ($action === 'event') ? $resource : null,
-            'url'    => ($action === 'load') ? $resource : null,
-            'args'   => $args,
-            'state'  => $state,
-        );
-        return new $class($info, $config);
-    }
-
-    /**
-     * Create client action object from its string representation
-     *
-     * @param string $ca            String representation of client action
-     * @param array $config         OPTIONAL Configuration options for this client action
-     * @return ClientAction
-     */
-    public function fromString($ca, array $config = null)
-    {
-        $class = $this->class;
-        $config = $this->prepareConfig($config);
-        return new $class($ca, $config);
-    }
-
-    /**
-     * Prepare given configuration for client action object
-     *
-     * @param array $config
-     * @return array
-     */
-    protected function prepareConfig(array $config = null)
-    {
-        if (!is_array($config)) {
-            $config = array();
+        $type = null;
+        if ($info instanceof ClientAction) {
+            $type = $info->action;
+        } elseif (is_array($info)) {
+            $type = (array_key_exists('action', $info)) ? $info['action'] : null;
+        } elseif (is_string($info)) {
+            $t = explode(':', $info, 2);
+            $type = array_shift($t);
         }
-        $config['url_generator'] = $this->generator;
-        return $config;
+        if (!$type) {
+            throw new \InvalidArgumentException('Unable to recognize given type of client action information');
+        }
+        $type = strtolower($type);
+        if (!array_key_exists($type, $this->actions)) {
+            throw new \InvalidArgumentException('Unknown client action type: ' . $type);
+        }
+        /** @var $ca ClientAction */
+        $ca = $this->actions[$type];
+        $config = $ca->modifyConfig(array(), $config);
+        $class = get_class($ca);
+        $ca = new $class($info, $config);
+        return $ca;
     }
 }

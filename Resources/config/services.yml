@@ -1,6 +1,9 @@
 parameters:
-    client_action.action.class: Flying\Bundle\ClientActionBundle\Struct\ClientAction
     client_action.factory.class: Flying\Bundle\ClientActionBundle\Factory\ClientActionFactory
+
+    client_action.action.load.class: Flying\Bundle\ClientActionBundle\ClientAction\LoadClientAction
+    client_action.action.event.class: Flying\Bundle\ClientActionBundle\ClientAction\EventClientAction
+    client_action.action.state.class: Flying\Bundle\ClientActionBundle\ClientAction\StateClientAction
 
     client_action.state.class: Flying\Bundle\ClientActionBundle\State\State
     client_action.state.initializer.class: Flying\Bundle\ClientActionBundle\EventListener\StateInitListener
@@ -15,12 +18,34 @@ parameters:
     client_action.menu.voter.class: Flying\Bundle\ClientActionBundle\Menu\Voter\ClientActionVoter
 
 services:
+    # Client actions factory
     client_action.factory:
         class: %client_action.factory.class%
-        arguments: [%client_action.action.class%, @?router]
+        arguments: [%client_action.actions%, @service_container]
+
+    # Client action objects for various actions
+    client_action.action.load:
+        class: %client_action.action.load.class%
+        arguments: [null, @router]
+        public: false
+        tags:
+            - { name: client_action.action, action: load }
+    client_action.action.event:
+        class: %client_action.action.event.class%
+        public: false
+        tags:
+            - { name: client_action.action, action: event }
+    client_action.action.state:
+        class: %client_action.action.state.class%
+        public: false
+        tags:
+            - { name: client_action.action, action: state }
+
+    # Current application state object. Determined and defined by @client_action.state.init_event_listener
     client_action.state:
         class: %client_action.state.class%
         synthetic: true
+
     client_action.state.initializer:
         class: %client_action.state.initializer.class%
         arguments: [@service_container]
@@ -32,13 +57,16 @@ services:
         tags:
             - { name: kernel.event_subscriber }
             - { name: client_action.state.subscriber }
+
     client_action.state.nsmap:
         class: %client_action.state.nsmap.class%
         arguments: [%client_action.state.nsmap.namespaces%]
+
     client_action.menu.factory_extension:
         class: %client_action.menu.factory_extension.class%
         tags:
             - { name: knp_menu.factory_extension }
+
     client_action.menu.voter:
         class: %client_action.menu.voter.class%
         arguments: [@client_action.state]
