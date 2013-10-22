@@ -1,6 +1,6 @@
 <?php
 
-namespace Flying\Bundle\ClientActionBundle\Tests\Struct\Fixtures;
+namespace Flying\Bundle\ClientActionBundle\Tests\State\Fixtures;
 
 interface TestStateInterface
 {

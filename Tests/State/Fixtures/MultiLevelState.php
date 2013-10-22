@@ -1,24 +1,31 @@
 <?php
 
-namespace Flying\Bundle\ClientActionBundle\Tests\Struct\Fixtures;
+namespace Flying\Bundle\ClientActionBundle\Tests\State\Fixtures;
 
 use Flying\Bundle\ClientActionBundle\State\State;
+use Flying\Struct\Property\Collection;
 
 /**
+ * @property string $category
+ * @property Collection $selected
+ * @property State $sort
+ * @property State $paginator
+ * @property State $synthetic
+ *
  * @Struct\String(name="category", default="main")
  * @Struct\Collection(name="selected", default={1,2,3})
  * @Struct\Struct(name="sort", {
- * @Struct\String(name="column", default="date", nullable=false),
- * @Struct\Enum(name="order", values={"asc", "desc"}, default="desc", nullable=false)
+ *      @Struct\String(name="column", default="date", nullable=false),
+ *      @Struct\Enum(name="order", values={"asc", "desc"}, default="desc", nullable=false)
  * })
  * @Struct\Struct(name="paginator", {
- * @Struct\Int(name="page", default=1, min=1),
- * @Struct\Int(name="page_size", default=20, min=10)
+ *      @Struct\Int(name="page", default=1, min=1),
+ *      @Struct\Int(name="page_size", default=20, min=10)
  * })
  * @Struct\Struct(name="synthetic", {
- * @Struct\String(name="test", default="for"),
- * @Struct\Struct(name="multiple", {
- * @Struct\String(name="structure", default="levels")
+ *      @Struct\String(name="test", default="for"),
+ *      @Struct\Struct(name="multiple", {
+ *          @Struct\String(name="structure", default="levels")
  *      })
  * })
  */

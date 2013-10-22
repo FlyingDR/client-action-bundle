@@ -1,11 +1,11 @@
 <?php
 
-namespace Flying\Bundle\ClientActionBundle\Tests\Struct;
+namespace Flying\Bundle\ClientActionBundle\Tests\State;
 
 use Flying\Bundle\ClientActionBundle\State\State;
-use Flying\Bundle\ClientActionBundle\Tests\Struct\Fixtures\MultiLevelState;
-use Flying\Bundle\ClientActionBundle\Tests\Struct\Fixtures\SimpleState;
-use Flying\Bundle\ClientActionBundle\Tests\Struct\Fixtures\TestStateInterface;
+use Flying\Bundle\ClientActionBundle\Tests\State\Fixtures\MultiLevelState;
+use Flying\Bundle\ClientActionBundle\Tests\State\Fixtures\SimpleState;
+use Flying\Bundle\ClientActionBundle\Tests\State\Fixtures\TestStateInterface;
 use Flying\Tests\TestCase;
 
 class StateTest extends TestCase
@@ -32,7 +32,7 @@ class StateTest extends TestCase
     {
         return array(
             array(
-                'Flying\Bundle\ClientActionBundle\Tests\Struct\Fixtures\SimpleState',
+                'Flying\Bundle\ClientActionBundle\Tests\State\Fixtures\SimpleState',
                 array(
                     'name'   => 'John',
                     'age'    => null,
@@ -40,7 +40,7 @@ class StateTest extends TestCase
                 ),
             ),
             array(
-                'Flying\Bundle\ClientActionBundle\Tests\Struct\Fixtures\MultiLevelState',
+                'Flying\Bundle\ClientActionBundle\Tests\State\Fixtures\MultiLevelState',
                 array(
                     'category'                     => 'main',
                     'selected'                     => array(1, 2, 3),
@@ -72,8 +72,8 @@ class StateTest extends TestCase
     public function dpReceivingDefaultState()
     {
         return array(
-            array('Flying\Bundle\ClientActionBundle\Tests\Struct\Fixtures\SimpleState'),
-            array('Flying\Bundle\ClientActionBundle\Tests\Struct\Fixtures\MultiLevelState'),
+            array('Flying\Bundle\ClientActionBundle\Tests\State\Fixtures\SimpleState'),
+            array('Flying\Bundle\ClientActionBundle\Tests\State\Fixtures\MultiLevelState'),
         );
     }
 
