@@ -1,3 +1,0 @@
-assetic:
-    assets:
-        jquery_ca: @ClientActionBundle/Resources/public/js/jquery.ca.js
