@@ -39,7 +39,6 @@ class LoadClientAction extends StateAwareClientAction
     public function toClient()
     {
         $client = parent::toClient();
-        unset($client['event']);
         if (strpos($client['url'], '/') === false) {
             // Render route name into URL
             /** @var $generator UrlGeneratorInterface */
@@ -47,8 +46,12 @@ class LoadClientAction extends StateAwareClientAction
             if (!$generator) {
                 throw new \RuntimeException('URL generator service should be provided to allow handling routes in "load" client actions');
             }
-            $client['url'] = $generator->generate($client['url'], $client['args']);
-            unset($client['args']);
+            $args = array();
+            if (array_key_exists('args', $client)) {
+                $args = $client['args'];
+                unset($client['args']);
+            };
+            $client['url'] = $generator->generate($client['url'], $args);
         }
         return $client;
     }
