@@ -1,20 +1,22 @@
 <?php
 namespace Flying\Bundle\ClientActionBundle\Tests\Menu\Voter;
 
+use Flying\Bundle\ClientActionBundle\ClientAction\StateClientAction;
 use Flying\Bundle\ClientActionBundle\Menu\Factory\ClientActionExtension;
 use Flying\Bundle\ClientActionBundle\Menu\Voter\ClientActionVoter;
-use Flying\Bundle\ClientActionBundle\Struct\ClientAction;
+use Flying\Bundle\ClientActionBundle\ClientAction\ClientAction;
 use Flying\Bundle\ClientActionBundle\State\State;
-use Flying\Bundle\ClientActionBundle\Tests\Struct\Fixtures\MultiLevelState;
-use Flying\Bundle\ClientActionBundle\Tests\Struct\Fixtures\SimpleState;
-use Flying\Bundle\ClientActionBundle\Tests\TestCase;
+use Flying\Bundle\ClientActionBundle\Tests\State\Fixtures\MultiLevelState;
+use Flying\Bundle\ClientActionBundle\Tests\State\Fixtures\SimpleState;
+use Flying\Bundle\ClientActionBundle\Tests\TestCaseUsingFactory;
 use Knp\Menu\MenuFactory;
 use Knp\Menu\MenuItem;
 
-class ClientActionVoterTest extends TestCase
+class ClientActionVoterTest extends TestCaseUsingFactory
 {
     /**
      * Menu items factory
+     *
      * @var MenuFactory
      */
     protected $factory;
@@ -48,55 +50,56 @@ class ClientActionVoterTest extends TestCase
 
     public function dpItemMatching()
     {
+        $factory = $this->getTestFactory();
         return array(
             array(
                 new SimpleState(),
-                new ClientAction(),
+                new StateClientAction(),
                 null,
             ),
             array(
                 new SimpleState(),
-                new ClientAction('state:#name=John&active=true'),
+                $factory->create('state:?name=John&active=true'),
                 true,
             ),
             array(
                 new SimpleState(),
-                new ClientAction('state:#active=null'),
+                $factory->create('state:?active=null'),
                 false,
             ),
             array(
                 new SimpleState(array('name' => 'Paul', 'active' => null)),
-                new ClientAction('state:#active=null'),
+                $factory->create('state:?active=null'),
                 true,
             ),
             array(
                 new SimpleState(array('name' => 'Paul', 'active' => null, 'age' => 45)),
-                new ClientAction('event:someEvent?age=123&active=disabled#active=null&name=Paul'),
+                $factory->create('event:someEvent?age=123&active=disabled#active=null&name=Paul'),
                 true,
             ),
             array(
                 new MultiLevelState(),
-                new ClientAction('state:#category=main&sort.column=date&sort.order=desc'),
+                $factory->create('state:?category=main&sort.column=date&sort.order=desc'),
                 true,
             ),
             array(
                 new MultiLevelState(),
-                new ClientAction('state:#category=main&sort.column=date&sort.order=desc&unknown=value'),
+                $factory->create('state:?category=main&sort.column=date&sort.order=desc&unknown=value'),
                 false,
             ),
             array(
                 new MultiLevelState(),
-                new ClientAction('state:#selected=[1,3]'),
+                $factory->create('state:?selected=[1,3]'),
                 false,
             ),
             array(
                 new MultiLevelState(),
-                new ClientAction('state:#selected=[1,2,3]'),
+                $factory->create('state:?selected=[1,2,3]'),
                 true,
             ),
             array(
                 new MultiLevelState(),
-                new ClientAction('state:#selected=[3,2,1]'),
+                $factory->create('state:?selected=[3,2,1]'),
                 true,
             ),
         );

@@ -2,8 +2,8 @@
 
 namespace Flying\Bundle\ClientActionBundle\Tests\Menu\Factory;
 
+use Flying\Bundle\ClientActionBundle\ClientAction\StateClientAction;
 use Flying\Bundle\ClientActionBundle\Menu\Factory\ClientActionExtension;
-use Flying\Bundle\ClientActionBundle\Struct\ClientAction;
 use Flying\Bundle\ClientActionBundle\Tests\TestCase;
 use Knp\Menu\ItemInterface;
 use Mockery;
@@ -79,7 +79,7 @@ class ClientActionExtensionTest extends TestCase
         $item = Mockery::mock('Knp\Menu\ItemInterface');
         if ($haveCa) {
             $item->shouldReceive('setExtra')->once()
-                ->with('ca', Mockery::type('Flying\Bundle\ClientActionBundle\Struct\ClientAction'))->getMock();
+                ->with('ca', Mockery::type('Flying\Bundle\ClientActionBundle\ClientAction\ClientAction'))->getMock();
         }
         /** @var $item ItemInterface */
         $extension->buildItem($item, $options);
@@ -100,14 +100,14 @@ class ClientActionExtensionTest extends TestCase
             ),
             array(
                 array(
-                    'ca' => new ClientAction(),
+                    'ca' => new StateClientAction(),
                 ),
                 true,
             ),
             array(
                 array(
                     'some' => 'option',
-                    'ca'   => new ClientAction(),
+                    'ca'   => new StateClientAction(),
                 ),
                 true,
             ),
@@ -124,7 +124,7 @@ class ClientActionExtensionTest extends TestCase
                 array(
                     'some'   => 'option',
                     'extras' => array(
-                        'ca'  => new ClientAction(),
+                        'ca'  => new StateClientAction(),
                         'xyz' => 123,
                     ),
                 ),

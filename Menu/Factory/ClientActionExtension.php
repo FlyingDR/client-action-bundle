@@ -2,7 +2,7 @@
 
 namespace Flying\Bundle\ClientActionBundle\Menu\Factory;
 
-use Flying\Bundle\ClientActionBundle\Struct\ClientAction;
+use Flying\Bundle\ClientActionBundle\ClientAction\ClientAction;
 use Knp\Menu\Factory\ExtensionInterface;
 use Knp\Menu\ItemInterface;
 
