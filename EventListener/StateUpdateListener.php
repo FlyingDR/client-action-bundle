@@ -2,9 +2,9 @@
 
 namespace Flying\Bundle\ClientActionBundle\EventListener;
 
+use Flying\Bundle\ClientActionBundle\ClientAction\StateClientAction;
 use Flying\Bundle\ClientActionBundle\State\State;
 use Flying\Bundle\ClientActionBundle\State\StateSubscriberInterface;
-use Flying\Bundle\ClientActionBundle\Struct\ClientAction;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\FilterControllerEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
@@ -74,7 +74,7 @@ class StateUpdateListener implements EventSubscriberInterface, StateSubscriberIn
             // No application state is available
             return;
         }
-        $ca = new ClientAction(array('action' => 'state', 'state' => $params));
+        $ca = new StateClientAction(array('state' => $params));
         $this->state->set($ca->state->toArray());
     }
 
