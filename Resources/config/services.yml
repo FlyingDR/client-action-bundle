@@ -21,7 +21,6 @@ services:
     # Client actions factory
     client_action.factory:
         class: %client_action.factory.class%
-        arguments: [%client_action.actions%, @service_container]
 
     # Client action objects for various actions
     client_action.action.load:
