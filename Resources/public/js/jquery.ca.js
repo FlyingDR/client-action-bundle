@@ -236,6 +236,7 @@
         this.event = null;
         this.url = null;
         this.args = {};
+        this.operation = null;
         this.state = {};
         if (ca !== undefined) {
             this.modify(this.parse(ca));
@@ -299,7 +300,26 @@
                     if (data.indexOf('#') !== -1) {
                         t = data.split('#', 2);
                         data = t.shift();
-                        result['state'] = this._parseArgs(t.shift());
+                        var st = t.shift();
+                        var op = null;
+                        switch (st.substr(0, 1)) {
+                            case '=':
+                                op = 'set';
+                                break;
+                            case '!':
+                                op = 'reset';
+                                break;
+                            case '~':
+                                op = 'toggle';
+                                break;
+                        }
+                        if (op !== null) {
+                            st = st.substr(1);
+                        } else {
+                            op = 'modify';
+                        }
+                        result['operation'] = op;
+                        result['state'] = this._parseArgs(st);
                     }
                     if (data.indexOf('?') !== -1) {
                         t = data.split('?', 2);
@@ -307,10 +327,16 @@
                         result['args'] = this._parseArgs(t.shift());
                     }
                     if (data.length) {
-                        if ((result['action'] || false) === 'event') {
-                            result['event'] = data;
-                        } else {
-                            result['url'] = data;
+                        switch (result['action'] || false) {
+                            case 'load':
+                                result['url'] = data;
+                                break;
+                            case 'event':
+                                result['event'] = data;
+                                break;
+                            case 'state':
+                                result['operation'] = data;
+                                break;
                         }
                     }
                 } else {
@@ -332,6 +358,10 @@
                     }
                 }
             });
+            if (((result['action'] || false) === 'state') && ($.isEmptyObject(result['state'] || {})) && (!$.isEmptyObject(result['args'] || {}))) {
+                result['state'] = result['args'];
+                result['args'] = {};
+            }
             return result;
         },
 
