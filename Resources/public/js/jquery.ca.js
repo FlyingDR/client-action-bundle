@@ -44,7 +44,7 @@
             if (!$.isPlainObject(definition)) {
                 definition = {};
             }
-            this._fromPlain(definition, this.struct);
+            this.struct = this._fromPlain(definition);
             if (contents !== undefined) {
                 this.set(contents);
             }
@@ -53,27 +53,59 @@
         /**
          * Convert given object from "plain" dotted index notation into normal object
          *
-         * @param {Object} src
-         * @param {Object} dest
+         * @param {Object} obj          Object to convert
+         * @return {Object}
          * @private
          */
-        _fromPlain: function (src, dest) {
-            for (var i in src) {
-                var value = src[i];
-                if (i.indexOf('.') != -1) {
-                    var parts = i.split('.');
-                    var index = parts.shift();
-                    var prefix = parts.join('.');
-                    var temp = {};
-                    temp[prefix] = value;
-                    if (dest[index] === undefined) {
-                        dest[index] = {};
+        _fromPlain: function (obj) {
+            var result = {}, value, part, parts, target;
+            for (var i in obj) {
+                value = obj[i];
+                target = result;
+                parts = i.split('.');
+                do {
+                    part = parts.shift();
+                    if (!$.isPlainObject(result[part] || false)) {
+                        target[part] = {};
                     }
-                    this._fromPlain(temp, dest[index]);
-                } else {
-                    dest[i] = value;
-                }
+                    if (parts.length) {
+                        target = target[part];
+                    } else {
+                        target[part] = value;
+                    }
+                } while (parts.length);
             }
+            return result;
+        },
+
+        /**
+         * Convert given object into plain object with dotted index notation
+         *
+         * @param {Object} obj          Object to convert
+         * @param {String} [prefix]     Keys prefix
+         * @return {Object}
+         * @private
+         */
+        _toPlain: function (obj, prefix) {
+            var plain = {};
+            if (typeof(prefix) !== 'string') {
+                prefix = '';
+            }
+            if ((prefix.length && prefix.substr(-1) !== '.')) {
+                prefix += '.';
+            }
+            for (var key in obj) {
+                var value = obj[key];
+                if ($.isPlainObject(value)) {
+                    value = this._toPlain(value, prefix + key);
+                    for (var j in value) {
+                        plain[j] = value[j];
+                    }
+                    continue;
+                }
+                plain[prefix + key] = value;
+            }
+            return plain;
         },
 
         /**
