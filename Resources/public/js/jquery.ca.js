@@ -28,20 +28,28 @@
     };
 
     /**
-     * Application state object
+     * Fixed structure implementation
      *
-     * @param {Object} state    Application state
+     * @param {Object} definition   Structure definition
+     * @param {Object} [contents]   Initial contents
      * @constructor
      */
-    function CaState(state) {
-        this.state = {};
-        if (!$.isPlainObject(state)) {
-            state = {};
-        }
-        this._fromPlain(state, this.state);
+    function CaStruct(definition, contents) {
+        this._init(definition, contents);
     }
 
-    CaState.prototype = {
+    CaStruct.prototype = {
+        _init: function (definition, contents) {
+            this.struct = {};
+            if (!$.isPlainObject(definition)) {
+                definition = {};
+            }
+            this._fromPlain(definition, this.struct);
+            if (contents !== undefined) {
+                this.set(contents);
+            }
+        },
+
         /**
          * Convert given object from "plain" dotted index notation into normal object
          *
@@ -69,25 +77,25 @@
         },
 
         /**
-         * Get application state value
+         * Get structure value
          *
-         * @param {string} [path]   Path into application state object to get value of
+         * @param {string} [path]   Path into structure object to get value of
          * @return {*}
          */
         get: function (path) {
             if (path === undefined) {
-                return this.state;
+                return this.struct;
             }
             var parts = path.split('.');
-            var state = this.state;
+            var struct = this.struct;
             for (var i = 0; i < parts.length; i++) {
                 var name = parts[i];
-                if ($.type(state[name]) !== 'undefined') {
+                if (typeof(struct[name]) !== 'undefined') {
                     if (i == (parts.length - 1)) {
-                        return state[name];
+                        return struct[name];
                     } else {
-                        if (($.isPlainObject(state[name])) || (state[name] instanceof Array)) {
-                            state = state[name];
+                        if (($.isPlainObject(struct[name])) || (struct[name] instanceof Array)) {
+                            struct = struct[name];
                         } else {
                             break;
                         }
@@ -99,32 +107,58 @@
         },
 
         /**
-         * Set value of application state entry by given path
+         * Set structure value by given path
          *
-         * @param {string|Object} path      Path into application state object to set value of
-         * @param {*} [value]               New value of application state entry
-         * @param {Boolean} [silent]        TRUE to perform silent modification (e.g. to sync app.state with external state source)
+         * @param {string} [path]   Path into structure object to set value of (can be skipped)
+         * @param {*} [value]       New value of application state entry
          */
-        set: function (path, value, silent) {
-            var modifications = path;
-            if ($.type(path) == 'string') {
-                modifications = {};
-                modifications[path] = value;
+        set: function (path, value) {
+            if (typeof(path) !== 'string') {
+                value = path;
+            } else {
+                var t = {};
+                t[path] = value;
+                value = t;
             }
-            var modified = [];
+            this._modify(this.struct, value);
+        },
+
+        /**
+         * Apply given modifications to structure object
+         *
+         * @param {Object} struct           Structure to apply modifications to
+         * @param {Object} modifications    Modifications to apply
+         * @param {Array} [modified]         List of modified values
+         * @param {String} [prefix]         Prefix to list of modified values
+         * @returns {Array}
+         * @private
+         */
+        _modify: function (struct, modifications, modified, prefix) {
+            if (!(modified instanceof Array)) {
+                modified = [];
+            }
+            if (typeof(prefix) !== 'string') {
+                prefix = '';
+            }
+            if ((prefix.length && prefix.substr(-1) !== '.')) {
+                prefix += '.';
+            }
             for (var p in modifications) {
                 var parts = p.split('.');
-                value = modifications[p];
-                var state = this.state;
+                var v = modifications[p];
                 for (var i = 0; i < parts.length; i++) {
                     var name = parts[i];
-                    if ($.type(state[name]) !== 'undefined') {
+                    if (typeof(struct[name]) !== 'undefined') {
                         if (i == (parts.length - 1)) {
-                            state[name] = value;
-                            modified.push(p);
+                            if (($.isPlainObject(struct[name])) && ($.isPlainObject(v))) {
+                                modified = this._modify(struct[name], v, modified, prefix + p);
+                            } else {
+                                struct[name] = v;
+                                modified.push(prefix + p);
+                            }
                         } else {
-                            if (($.isPlainObject(state[name])) || (state[name] instanceof Array)) {
-                                state = state[name];
+                            if (($.isPlainObject(struct[name])) || (struct[name] instanceof Array)) {
+                                struct = struct[name];
                             } else {
                                 break;
                             }
@@ -133,16 +167,14 @@
                         break;
                     }
                 }
-                if ((modified.length) && (silent || false)) {
-                    $(document).trigger('ca.state.modified', modified);
-                }
             }
+            return modified;
         },
 
         /**
-         * Toggle given value into given application state entry
+         * Toggle given value into structure entry
          *
-         * @param {string} path     Path into application state object to toggle value in
+         * @param {string} path     Path into structure object to toggle value in
          * @param {*} [value]       Value to toggle
          */
         toggle: function (path, value) {
@@ -161,6 +193,36 @@
             }
         }
     };
+
+    function CaState(state) {
+        this._init(state);
+    }
+
+    CaState.prototype = $.extend(CaStruct.prototype, {
+        /**
+         * Set value of application state entry by given path
+         *
+         * @param {string} [path]       Path into structure object to set value of (can be skipped)
+         * @param {*} [value]           New value of application state entry
+         * @param {Boolean} [silent]    TRUE to perform silent modification (e.g. to sync app.state with external state source)
+         */
+        set: function (path, value, silent) {
+            if (typeof(path) !== 'string') {
+                silent = value;
+                value = path;
+                path = undefined;
+            }
+            if (path !== undefined) {
+                var t = {};
+                t[path] = value;
+                value = t;
+            }
+            var modified = this._modify(this.struct, value);
+            if ((modified.length) && (!(silent || false))) {
+                $(document).trigger('ca.state.modified', modified);
+            }
+        }
+    });
 
     /**
      * Client action object
@@ -245,7 +307,7 @@
                         result['args'] = this._parseArgs(t.shift());
                     }
                     if (data.length) {
-                        if ((result['action'] || false) == 'event') {
+                        if ((result['action'] || false) === 'event') {
                             result['event'] = data;
                         } else {
                             result['url'] = data;
@@ -397,10 +459,10 @@
             var valid = true;
             switch (this.action) {
                 case 'load':
-                    valid &= ($.type(this.url) === 'string');
+                    valid &= (typeof(this.url) === 'string');
                     break;
                 case 'event':
-                    valid &= ($.type(this.event) === 'string');
+                    valid &= (typeof(this.event) === 'string');
                     break;
                 case 'state':
                     valid &= ($.isPlainObject(this.state) && !$.isEmptyObject(this.state));
@@ -609,7 +671,7 @@
                                 msg = 'Error while loading url "' + url + '": HTTP ' + data.status + ' ' + data.statusText;
                                 $.error(msg);
                             }
-                        } else if ($.type(data) === 'string') {
+                        } else if (typeof(data) === 'string') {
                             $.error(data);
                         } else {
                             $.error(msg);
@@ -618,7 +680,7 @@
                     break;
             }
             // Reject onload $.Deferred object if we get it
-            if (this.isCallback(this.options.onload) == 'deferred') {
+            if (this.isCallback(this.options.onload) === 'deferred') {
                 this.options.onload.rejectWith(cbThis, [data]);
             }
         },
@@ -640,12 +702,12 @@
                             this.target.addClass(options.loadingClass);
                         }
                         if ((options.mask) && ($.fn.mask || false)) {
-                            this.target.mask(($.type(options.mask) == 'string') ? options.mask : '');
+                            this.target.mask((typeof(options.mask) === 'string') ? options.mask : '');
                         }
                         if ((options.activity) && ($.fn.activity || false)) {
                             this.target.activity(($.isPlainObject(options.activity)) ? options.activity : {});
                         }
-                    } else if (($.type(options.indicator) == 'string') || (options.indicator instanceof jQuery)) {
+                    } else if ((typeof(options.indicator) === 'string') || (options.indicator instanceof jQuery)) {
                         $(options.indicator).show();
                     }
                 }
@@ -663,7 +725,7 @@
                     if (options.loadingClass) {
                         this.target.removeClass(options.loadingClass);
                     }
-                } else if (($.type(options.indicator) == 'string') || (options.indicator instanceof jQuery)) {
+                } else if ((typeof(options.indicator) === 'string') || (options.indicator instanceof jQuery)) {
                     $(options.indicator).hide();
                 }
             }
@@ -697,7 +759,7 @@
      * @constructor
      */
     function Plugin() {
-        this._options = defaults;
+        this._options = null;
         this._state = null;
         this.initialized = false;
     }
@@ -718,8 +780,7 @@
                 return;
             }
             this._state = new CaState(state || {});
-            this._options = new CaState(this._options || {});
-            this._options.set(options || {});
+            this._options = new CaStruct(defaults || {}, options);
             // Setup client actions handlers
             $(document)
                 .on('ca.init', $.proxy(this.handlers.init, this))
@@ -736,9 +797,9 @@
          * @return {*}
          */
         options: function (name, value) {
-            switch ($.type(name)) {
+            switch (typeof(name)) {
                 case 'string':  // Get/set some single value of application state
-                    if ($.type(value) !== 'undefined') {
+                    if (typeof(value) !== 'undefined') {
                         this._options.set(name, value);
                     } else {
                         return this._options.get(name);
@@ -784,9 +845,9 @@
          * @return {*}
          */
         state: function (name, value) {
-            switch ($.type(name)) {
+            switch (typeof(name)) {
                 case 'string':  // Get/set some single value of application state
-                    if ($.type(value) !== 'undefined') {
+                    if (typeof(value) !== 'undefined') {
                         this._state.set(name, value);
                     } else {
                         return this._state.get(name);
@@ -934,7 +995,7 @@
             var autoTarget;
             if ((!ca.target) && (target)) {
                 autoTarget = target.parents('.' + $.ca('options', 'autoTargetClass')).first();
-            } else if ($.type(ca.target) === 'string') {
+            } else if (typeof(ca.target) === 'string') {
                 autoTarget = $(ca.target);
             }
             if (autoTarget.length || false) {
