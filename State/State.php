@@ -12,6 +12,18 @@ use Flying\Struct\Struct;
  */
 class State extends StorableStruct implements ClientExportInterface
 {
+    /**
+     * Get Id of this application state object
+     *
+     * @return string
+     */
+    public function getId()
+    {
+        $id = explode('\\', get_class($this));
+        $id = array_pop($id);
+        $id = lcfirst(preg_replace('/State$/', '', $id));
+        return $id;
+    }
 
     /**
      * Get application state representation suitable for client side of application

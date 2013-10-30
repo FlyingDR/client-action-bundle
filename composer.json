@@ -29,6 +29,7 @@
         "sensio/framework-extra-bundle": "~2.2",
         "mockery/mockery": "~0.8",
         "knplabs/knp-menu": "~2.0@dev",
-        "knplabs/knp-menu-bundle": "~2.0@dev"
+        "knplabs/knp-menu-bundle": "~2.0@dev",
+        "twig/twig": "~1.12"
     }
 }

@@ -17,6 +17,8 @@ parameters:
     client_action.menu.factory_extension.class: Flying\Bundle\ClientActionBundle\Menu\Factory\ClientActionExtension
     client_action.menu.voter.class: Flying\Bundle\ClientActionBundle\Menu\Voter\ClientActionVoter
 
+    client_action.twig.extension.class: Flying\Bundle\ClientActionBundle\Twig\ClientActionExtension
+
 services:
     # Client actions factory
     client_action.factory:
@@ -73,3 +75,10 @@ services:
         tags:
             - { name: knp_menu.voter, request: true }
             - { name: client_action.state.subscriber }
+
+    client_action.twig.extension:
+        class: %client_action.twig.extension.class%
+        arguments: [@client_action.factory]
+        public: false
+        tags:
+            - { name: twig.extension }
