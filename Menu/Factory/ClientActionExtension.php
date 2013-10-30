@@ -49,6 +49,7 @@ class ClientActionExtension implements ExtensionInterface
         }
         if ($ca instanceof ClientAction) {
             $item->setExtra('ca', $ca);
+            $item->setLabelAttributes($ca->toAttrs());
         }
     }
 

@@ -64,11 +64,12 @@ services:
     client_action.menu.factory_extension:
         class: %client_action.menu.factory_extension.class%
         tags:
-            - { name: knp_menu.factory_extension }
+            - { name: knp_menu.factory_extension, priority: -10 }
 
     client_action.menu.voter:
         class: %client_action.menu.voter.class%
         arguments: [@client_action.state]
+        public: false
         tags:
             - { name: knp_menu.voter, request: true }
             - { name: client_action.state.subscriber }
