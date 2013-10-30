@@ -6,6 +6,7 @@ use Flying\Bundle\ClientActionBundle\Annotation\State as StateAnnotation;
 use Flying\Bundle\ClientActionBundle\State\State;
 use Flying\Bundle\ClientActionBundle\State\StateSubscriberInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\DependencyInjection\Exception\RuntimeException;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\FilterControllerEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
@@ -22,6 +23,7 @@ class StateInitListener implements EventSubscriberInterface
     protected $container;
     /**
      * Subscribers to state initialization
+     *
      * @var array
      */
     protected $subscribers = array();
@@ -29,7 +31,7 @@ class StateInitListener implements EventSubscriberInterface
     /**
      * Constructor
      *
-     * @param ContainerInterface $container     The service container instance
+     * @param ContainerInterface $container The service container instance
      */
     public function __construct(ContainerInterface $container)
     {
@@ -79,6 +81,7 @@ class StateInitListener implements EventSubscriberInterface
                 throw new \RuntimeException('Application state information is not recognized');
             }
             if (!class_exists($class)) {
+                // @TODO Move namespaces resolution into container compiler pass
                 $sn = trim($class, '\\');
                 $class = null;
                 $namespaces = $this->container->get('client_action.state.nsmap')->getAll();
@@ -93,7 +96,19 @@ class StateInitListener implements EventSubscriberInterface
                     throw new \RuntimeException('Unable to find application state class "' . $sn . '"');
                 }
             }
-            $state = new $class();
+            try {
+                $cState = $this->container->get('client_action.state');
+                if (get_class($cState) === $class) {
+                    // We're already have required state class in container
+                    return;
+                }
+            } catch(RuntimeException $e) {
+                // This exception can be safely ignored because it is expected at a time
+                // when synthetic state service is not defined yet
+            }
+            if (!$state) {
+                $state = new $class();
+            }
             if (!$state instanceof State) {
                 throw new \RuntimeException('Application state object must be instance of State');
             }
