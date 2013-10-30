@@ -27,37 +27,18 @@
         }
     };
 
-    /**
-     * Fixed structure implementation
-     *
-     * @param {Object} definition   Structure definition
-     * @param {Object} [contents]   Initial contents
-     * @constructor
-     */
-    function CaStruct(definition, contents) {
-        this._init(definition, contents);
+    function CaUtils() {
+
     }
 
-    CaStruct.prototype = {
-        _init: function (definition, contents) {
-            this.struct = {};
-            if (!$.isPlainObject(definition)) {
-                definition = {};
-            }
-            this.struct = this._fromPlain(definition);
-            if (contents !== undefined) {
-                this.set(contents);
-            }
-        },
-
+    CaUtils.prototype = {
         /**
          * Convert given object from "plain" dotted index notation into normal object
          *
          * @param {Object} obj          Object to convert
          * @return {Object}
-         * @private
          */
-        _fromPlain: function (obj) {
+        fromPlain: function (obj) {
             var result = {}, value, part, parts, target;
             for (var i in obj) {
                 value = obj[i];
@@ -84,9 +65,8 @@
          * @param {Object} obj          Object to convert
          * @param {String} [prefix]     Keys prefix
          * @return {Object}
-         * @private
          */
-        _toPlain: function (obj, prefix) {
+        toPlain: function (obj, prefix) {
             var plain = {};
             if (typeof(prefix) !== 'string') {
                 prefix = '';
@@ -109,6 +89,97 @@
         },
 
         /**
+         * Get list of keys from given object
+         *
+         * @param {Object} obj          Object to get keys of
+         * @param {Boolean} [sorted]    TRUE to sort keys before returning
+         * @returns {Array}
+         */
+        getKeys: function (obj, sorted) {
+            var keys = [];
+            if ($.isPlainObject(obj)) {
+                for (var i in obj) {
+                    keys.push(i);
+                }
+            }
+            if (sorted || false) {
+                keys.sort();
+            }
+            return keys;
+        },
+
+        /**
+         * Apply given modifications to given object
+         *
+         * @param {Object} obj              Object to apply modifications to
+         * @param {Object} modifications    Modifications to apply
+         * @param {Array} [modified]        List of modified values
+         * @param {String} [prefix]         Prefix to list of modified values
+         * @returns {Array}
+         */
+        modify: function (obj, modifications, modified, prefix) {
+            if (!(modified instanceof Array)) {
+                modified = [];
+            }
+            if (typeof(prefix) !== 'string') {
+                prefix = '';
+            }
+            if ((prefix.length && prefix.substr(-1) !== '.')) {
+                prefix += '.';
+            }
+            for (var p in modifications) {
+                var parts = p.split('.');
+                var v = modifications[p];
+                for (var i = 0; i < parts.length; i++) {
+                    var name = parts[i];
+                    if (typeof(obj[name]) !== 'undefined') {
+                        if (i == (parts.length - 1)) {
+                            if (($.isPlainObject(obj[name])) && ($.isPlainObject(v))) {
+                                modified = CaUtils.prototype.modify(obj[name], v, modified, prefix + p);
+                            } else {
+                                obj[name] = v;
+                                modified.push(prefix + p);
+                            }
+                        } else {
+                            if (($.isPlainObject(obj[name])) || (obj[name] instanceof Array)) {
+                                obj = obj[name];
+                            } else {
+                                break;
+                            }
+                        }
+                    } else {
+                        break;
+                    }
+                }
+            }
+            return modified;
+        }
+    };
+
+    /**
+     * Fixed structure implementation
+     *
+     * @param {Object} definition   Structure definition
+     * @param {Object} [contents]   Initial contents
+     * @constructor
+     */
+    function CaStruct(definition, contents) {
+        this._init(definition, contents);
+    }
+
+    CaStruct.prototype = {
+        _init: function (definition, contents) {
+            this._struct = {};
+            if (!$.isPlainObject(definition)) {
+                definition = {};
+            }
+            this._struct = CaUtils.prototype.fromPlain(definition);
+            if (contents !== undefined) {
+                this.set(contents);
+            }
+        },
+
+        /**
          * Get structure value
          *
          * @param {string} [path]   Path into structure object to get value of
@@ -116,10 +187,10 @@
          */
         get: function (path) {
             if (path === undefined) {
-                return this.struct;
+                return this._struct;
             }
             var parts = path.split('.');
-            var struct = this.struct;
+            var struct = this._struct;
             for (var i = 0; i < parts.length; i++) {
                 var name = parts[i];
                 if (typeof(struct[name]) !== 'undefined') {
@@ -152,93 +223,52 @@
                 t[path] = value;
                 value = t;
             }
-            this._modify(this.struct, value);
-        },
-
-        /**
-         * Apply given modifications to structure object
-         *
-         * @param {Object} struct           Structure to apply modifications to
-         * @param {Object} modifications    Modifications to apply
-         * @param {Array} [modified]         List of modified values
-         * @param {String} [prefix]         Prefix to list of modified values
-         * @returns {Array}
-         * @private
-         */
-        _modify: function (struct, modifications, modified, prefix) {
-            if (!(modified instanceof Array)) {
-                modified = [];
-            }
-            if (typeof(prefix) !== 'string') {
-                prefix = '';
-            }
-            if ((prefix.length && prefix.substr(-1) !== '.')) {
-                prefix += '.';
-            }
-            for (var p in modifications) {
-                var parts = p.split('.');
-                var v = modifications[p];
-                for (var i = 0; i < parts.length; i++) {
-                    var name = parts[i];
-                    if (typeof(struct[name]) !== 'undefined') {
-                        if (i == (parts.length - 1)) {
-                            if (($.isPlainObject(struct[name])) && ($.isPlainObject(v))) {
-                                modified = this._modify(struct[name], v, modified, prefix + p);
-                            } else {
-                                struct[name] = v;
-                                modified.push(prefix + p);
-                            }
-                        } else {
-                            if (($.isPlainObject(struct[name])) || (struct[name] instanceof Array)) {
-                                struct = struct[name];
-                            } else {
-                                break;
-                            }
-                        }
-                    } else {
-                        break;
-                    }
-                }
-            }
-            return modified;
-        },
-
-        /**
-         * Toggle given value into structure entry
-         *
-         * @param {string} path     Path into structure object to toggle value in
-         * @param {*} [value]       Value to toggle
-         */
-        toggle: function (path, value) {
-            var entry = this.get(path);
-            if (entry instanceof Array) {
-                if ($.inArray(value, entry) !== -1) {
-                    entry = $.grep(entry, function (v) {
-                        return(v !== value);
-                    });
-                } else {
-                    entry.push(value);
-                }
-                this.set(path, entry);
-            } else if ((entry === true) || (entry === false)) {
-                this.set(path, !entry);
-            }
+            CaUtils.prototype.modify(this._struct, value);
         }
     };
 
-    function CaState(state) {
-        this._init(state);
+    /**
+     * Application state structure implementation
+     *
+     * @param {String} [id]         State Id (can be skipped)
+     * @param {Object} definition   State structure definition
+     * @param {Object} [state]      Current state of structure
+     * @constructor
+     */
+    function CaState(id, definition, state) {
+        this._id = null;
+        this._definition = null;
+        if (typeof(id) !== 'string') {
+            state = definition;
+            definition = id;
+            id = null;
+        }
+        this._id = id;
+        this._definition = definition;
+        this._init(definition);
+        if ($.isPlainObject(state)) {
+            this.set(state, true);
+        }
     }
 
     CaState.prototype = $.extend(CaStruct.prototype, {
         /**
-         * Set value of application state entry by given path
+         * Get application state Id
+         *
+         * @returns {String}
+         */
+        id: function () {
+            return this._id;
+        },
+
+        /**
+         * Modify application state
          *
          * @param {string} [path]       Path into structure object to set value of (can be skipped)
          * @param {*} [value]           New value of application state entry
          * @param {Boolean} [silent]    TRUE to perform silent modification (e.g. to sync app.state with external state source)
          */
-        set: function (path, value, silent) {
+        modify: function (path, value, silent) {
             if (typeof(path) !== 'string') {
                 silent = value;
                 value = path;
@@ -249,7 +279,64 @@
                 t[path] = value;
                 value = t;
             }
-            var modified = this._modify(this.struct, value);
+            var modified = CaUtils.prototype.modify(this._struct, value);
+            this._notify(modified, silent);
+        },
+
+        /**
+         * Reset application state to its default state
+         *
+         * @param {Boolean} [silent]    TRUE to perform silent modification
+         */
+        reset: function (silent) {
+            var modified = CaUtils.prototype.modify(this._struct, this._definition);
+            this._notify(modified, silent);
+        },
+
+        /**
+         * Set given state as current application state
+         *
+         * @param {Object} state        State to set
+         * @param {Boolean} [silent]    TRUE to perform silent modification
+         */
+        set: function (state, silent) {
+            this.reset(silent);
+            this.modify(state, silent);
+        },
+
+        /**
+         * Toggle given value into application state
+         *
+         * @param {string} path         Path into application state field to toggle value in
+         * @param {*} [value]           Value to toggle
+         * @param {Boolean} [silent]    TRUE to perform silent modification
+         */
+        toggle: function (path, value, silent) {
+            var entry = this.get(path);
+            if (entry instanceof Array) {
+                if ($.inArray(value, entry) !== -1) {
+                    entry = $.grep(entry, function (v) {
+                        return(v !== value);
+                    });
+                } else {
+                    entry.push(value);
+                }
+            } else if ((entry === true) || (entry === false)) {
+                // value have no meaning here
+                silent = value;
+                entry = !entry;
+            }
+            this.modify(path, entry, silent);
+        },
+
+        /**
+         * Notify application about application state modifications
+         *
+         * @param {Array} modified      List of modified fields in application state
+         * @param {Boolean} [silent]    TRUE to suppress notification
+         * @private
+         */
+        _notify: function (modified, silent) {
             if ((modified.length) && (!(silent || false))) {
                 $(document).trigger('ca.state.modified', modified);
             }
@@ -606,7 +693,24 @@
                     $(ca.target).trigger(ca.event, ca.args);
                     break;
                 case 'state':
-                    $.ca('state', ca.state);
+                    var state = $.ca('state');
+                    switch (ca.operation) {
+                        case 'reset':
+                            state.reset();
+                            break;
+                        case 'set':
+                            state.set(ca.state);
+                            break;
+                        case 'toggle':
+                            for (var i in ca.state) {
+                                state.toggle(i, ca.state[i]);
+                            }
+                            break;
+                        case 'modify':
+                        default:
+                            ca.modify(ca.state);
+                            break;
+                    }
                     break;
             }
         }
@@ -688,11 +792,12 @@
                 var t = $('<div>');
                 this.target.empty().append(t);
                 t.replaceWith(data);
+                $(this.target).trigger('ca.init');
             }
             this.loadingIndicator(false);
             var cb = this.options.onload;
             var cbThis = (this.target) ? this.target : $(document);
-            cbThis.trigger('ca.load.completed', data);
+            cbThis.trigger('ca.loaded', data);
             switch (this.isCallback(cb)) {
                 case 'function':
                     cb.call(cbThis, data);
@@ -841,7 +946,29 @@
             if (this.initialized) {
                 return;
             }
-            this._state = new CaState(state || {});
+            if (!$.isPlainObject(state)) {
+                state = {};
+            }
+            var haveDefault = false;
+            if (($.isPlainObject(state.default || false)) && ($.isPlainObject(state.current || false))) {
+                var ck = CaUtils.prototype.getKeys(CaUtils.prototype.toPlain(state.current), true);
+                var dk = CaUtils.prototype.getKeys(CaUtils.prototype.toPlain(state.default), true);
+                var missed = false;
+                for (var k in ck) {
+                    if ($.inArray(k, dk) == -1) {
+                        missed = true;
+                        break;
+                    }
+                }
+                if (!missed) {
+                    haveDefault = true;
+                }
+            }
+            if (haveDefault) {
+                this._state = new CaState(state.id || null, state.default, state.current);
+            } else {
+                this._state = new CaState(state);
+            }
             this._options = new CaStruct(defaults || {}, options);
             // Setup client actions handlers
             $(document)
@@ -910,13 +1037,13 @@
             switch (typeof(name)) {
                 case 'string':  // Get/set some single value of application state
                     if (typeof(value) !== 'undefined') {
-                        this._state.set(name, value);
+                        this._state.modify(name, value);
                     } else {
                         return this._state.get(name);
                     }
                     break;
                 case 'object':  // Set multiple properties
-                    this._state.set(name);
+                    this._state.modify(name);
                     break;
                 default:
                     // Get whole state object
@@ -924,7 +1051,6 @@
                     break;
             }
         }
-
     };
 
     /**
