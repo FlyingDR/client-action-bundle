@@ -77,7 +77,7 @@
             for (var key in obj) {
                 var value = obj[key];
                 if ($.isPlainObject(value)) {
-                    value = this._toPlain(value, prefix + key);
+                    value = this.toPlain(value, prefix + key);
                     for (var j in value) {
                         plain[j] = value[j];
                     }
