@@ -26,6 +26,9 @@ class Configuration implements ConfigurationInterface
                         ->requiresAtLeastOneElement()
                         ->prototype('scalar')->end()
                     ->end()
+                    ->scalarNode('state_param')
+                        ->defaultValue('__state')
+                    ->end()
                 ->end()
             ->end();
 

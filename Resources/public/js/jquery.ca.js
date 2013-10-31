@@ -21,7 +21,10 @@
                 type: 'POST',
                 async: true
             },
-            urlTransformer: null,       // URL transformation function, it should accept ClientAction object as argument and return either URL string or {url:"url to load",data:"data to send to server"}
+            stateParam: '__state',      // Name of request parameter to store app.state modifications
+            urlTransformer: {           // URL transformation functions for various tasks
+                load: null              // URL transformer for "load" client actions, it should accept ClientAction object as argument and return either URL string or {url:"url to load",data:"data to send to server"}
+            },
             onload: null,               // Callback function to call when loading will be completed
             onerror: null               // Callback function to call in a case of error during loading process
         }
@@ -675,16 +678,21 @@
                 case 'load':
                     var url = ca.url;
                     var data = ca.args;
-                    var transformer = $.ca('options', 'loading.urlTransformer');
-                    if ($.isFunction(transformer)) {
-                        var t = transformer(ca);
-                        if ($.isPlainObject(t)) {
-                            url = t.url || url;
-                            data = t.data || data;
-                        } else {
-                            url = t;
-                            data = undefined;
+                    var transformer = $.ca('options', 'loading.urlTransformer.load');
+                    if (!$.isFunction(transformer)) {
+                        transformer = function (ca) {
+                            var state = {};
+                            state[$.ca('options', 'loading.stateParam')] = ca.state;
+                            return {url: ca.url, data: $.extend(true, ca.args, state)};
                         }
+                    }
+                    var t = transformer(ca);
+                    if ($.isPlainObject(t)) {
+                        url = t.url || url;
+                        data = t.data || data;
+                    } else {
+                        url = t;
+                        data = undefined;
                     }
                     var loader = new CaLoader({'url': url, 'data': data}, callback, options, ca.target);
                     loader.run();

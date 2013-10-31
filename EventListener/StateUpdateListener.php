@@ -25,7 +25,7 @@ class StateUpdateListener implements EventSubscriberInterface, StateSubscriberIn
      * Name of request parameter that container state modifications
      * @var string
      */
-    protected $stateParamName = '_state';
+    protected $stateParamName = '__state';
 
     /**
      * Constructor
