@@ -15,11 +15,13 @@ class ClientActionVoter implements VoterInterface, StateSubscriberInterface
 {
     /**
      * Client-side representation of current application state
+     *
      * @var State
      */
     protected $state;
     /**
      * Cached representation of client state as array
+     *
      * @var array
      */
     protected $stateArray = null;
@@ -81,7 +83,12 @@ class ClientActionVoter implements VoterInterface, StateSubscriberInterface
                         asort($sv);
                     }
                 }
-                $matched &= ($value === $sv);
+                if (($ca['operation'] === 'toggle') && (is_bool($sv))) {
+                    // Boolean value toggling, element is active if current value is active 
+                    $matched &= ($sv === true);
+                } else {
+                    $matched &= ($value === $sv);
+                }
             } else {
                 $matched = false;
             }
