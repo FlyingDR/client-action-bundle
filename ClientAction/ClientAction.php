@@ -120,11 +120,14 @@ abstract class ClientAction extends Struct
     /**
      * Get copy of this client action object with given modifications applied
      *
-     * @param array $modifications Modifications for client action to apply
+     * @param array|string|ClientAction $modifications Modifications for client action to apply
      * @return ClientAction
      */
-    public function getModified(array $modifications)
+    public function getModified($modifications)
     {
+        $modifications = array_filter($this->parse($modifications), function ($v) {
+            return (is_array($v)) ? (sizeof($v) > 0) : ($v !== null);
+        });
         $ca = clone $this;
         foreach ($modifications as $name => $value) {
             $orig = $this->get($name);
