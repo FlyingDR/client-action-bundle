@@ -39,12 +39,16 @@ class ClientActionExtension extends \Twig_Extension
      * Render given client action as a set of HTML attributes
      *
      * @param ClientAction|array|string $ca
+     * @param ClientAction|array|string $modifications Modifications for client action to apply
      * @return string
      */
-    public function renderCa($ca)
+    public function renderCa($ca, $modifications = null)
     {
         if (!$ca instanceof ClientAction) {
             $ca = $this->factory->create($ca);
+        }
+        if ($modifications !== null) {
+            $ca = $ca->getModified($modifications);
         }
         $attrs = $ca->toAttrs();
         return ' ' . join(' ', $attrs);
