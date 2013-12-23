@@ -50,8 +50,12 @@ class ClientActionExtension extends \Twig_Extension
         if ($modifications !== null) {
             $ca = $ca->getModified($modifications);
         }
+        $html = array();
         $attrs = $ca->toAttrs();
-        return ' ' . join(' ', $attrs);
+        foreach ($attrs as $k => $v) {
+            $html[] = $k . '="' . htmlentities($v, ENT_COMPAT, 'utf-8') . '"';
+        }
+        return ' ' . join(' ', $html);
     }
 
     /**
