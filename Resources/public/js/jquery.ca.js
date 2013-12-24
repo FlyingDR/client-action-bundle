@@ -405,7 +405,7 @@
             } else if ((data instanceof ClientAction) || ($.isPlainObject(data))) {
                 for (n in data) {
                     if (this.hasOwnProperty(n) && n.charAt(0) != '_') {
-                        result[n] = data[n];
+                        result[n] = ($.isPlainObject(data[n])) ? $.extend(true, {}, data[n]) : data[n];
                     }
                 }
             } else if (typeof(data) === 'string') {
@@ -1194,7 +1194,7 @@
                     if (baseCa instanceof ClientAction) {
                         baseCa = new ClientAction(baseCa);
                         baseCa.operation = ca.operation;
-                        for(var i in ca.state) {
+                        for (var i in ca.state) {
                             baseCa.state[i] = ca.state[i];
                         }
                         ca = baseCa;
