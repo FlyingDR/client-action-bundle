@@ -1175,8 +1175,8 @@
          * @param {jQuery.Event} ev
          */
         action: function (ev) {
-            var target = $(ev.target);
-            if (!target.length) {
+            var target = $(ev.currentTarget || ev.target);
+            if (!target.ca('applied')) {
                 return;
             }
             var ca = target.ca('get');
