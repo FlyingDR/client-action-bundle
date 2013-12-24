@@ -9,6 +9,7 @@
         caDataKey: 'ca',                // Name of element's "data" entry that stores applied client action
         caAppliedClass: 'ca-applied',   // CSS class to apply to elements that have applied client actions
         autoTargetClass: 'ca-target',   // CSS class to use to mark target element for client actions that doesn't define their target explicitly
+        baseCaClass: 'ca-base',         // CSS class to use to mark element that contains "base" client action to use for current state client action
         loading: {                      // Options for resources loading
             indicator: {
                 enabled: false,         // TRUE to indicate "loading" process
@@ -1183,8 +1184,23 @@
             if (!(ca instanceof ClientAction)) {
                 return;
             }
+            ev.stopPropagation();
             // Normalize client action
             ca = new ClientAction(ca);
+            if (ca.action === 'state') {
+                var baseCa = target.parents('.' + $.ca('options', 'baseCaClass')).first();
+                if (baseCa.length || false) {
+                    baseCa = baseCa.ca('get');
+                    if (baseCa instanceof ClientAction) {
+                        baseCa = new ClientAction(baseCa);
+                        baseCa.operation = ca.operation;
+                        for(var i in ca.state) {
+                            baseCa.state[i] = ca.state[i];
+                        }
+                        ca = baseCa;
+                    }
+                }
+            }
             if ((ca.action === 'load') && (!ca.url) && (target.is('[href]'))) {
                 ca.url = target.href;
             }
