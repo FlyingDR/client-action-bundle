@@ -7,9 +7,11 @@
     var pluginName = 'ca';
     var defaults = {
         caDataKey: 'ca',                // Name of element's "data" entry that stores applied client action
-        caAppliedClass: 'ca-applied',   // CSS class to apply to elements that have applied client actions
-        autoTargetClass: 'ca-target',   // CSS class to use to mark target element for client actions that doesn't define their target explicitly
-        baseCaClass: 'ca-base',         // CSS class to use to mark element that contains "base" client action to use for current state client action
+        classes: {                      // Various CSS classes to use for additional control of client actions behavior
+            caApplied: 'ca-applied',    // CSS class to apply to elements that have applied client actions
+            autoTarget: 'ca-target',    // CSS class to use to mark target element for client actions that doesn't define their target explicitly
+            baseCa: 'ca-base'           // CSS class to use to mark element that contains "base" client action to use for current state client action
+        },
         loading: {                      // Options for resources loading
             indicator: {
                 enabled: false,         // TRUE to indicate "loading" process
@@ -635,7 +637,7 @@
          * @return void
          */
         apply: function (elements) {
-            $(elements).data($.ca('options', 'caDataKey'), this).addClass($.ca('options', 'caAppliedClass'));
+            $(elements).data($.ca('options', 'caDataKey'), this).addClass($.ca('options', 'classes.caApplied'));
         },
 
         /**
@@ -982,7 +984,7 @@
             // Setup client actions handlers
             $(document)
                 .on('ca.init', $.proxy(this.handlers.init, this))
-                .on('click', '.' + $.ca('options', 'caAppliedClass'), $.proxy(this.handlers.action, this))
+                .on('click', '.' + $.ca('options', 'classes.caApplied'), $.proxy(this.handlers.action, this))
                 .trigger('ca.init');
             this.initialized = true;
         },
@@ -1112,7 +1114,7 @@
             return(this.each(function () {
                 var $this = $(this);
                 $this.removeData($.ca('options', 'caDataKey'));
-                $this.removeClass($.ca('options', 'caAppliedClass'));
+                $this.removeClass($.ca('options', 'classes.caApplied'));
             }));
         },
 
@@ -1188,7 +1190,7 @@
             // Normalize client action
             ca = new ClientAction(ca);
             if (ca.action === 'state') {
-                var baseCa = target.parents('.' + $.ca('options', 'baseCaClass')).first();
+                var baseCa = target.parents('.' + $.ca('options', 'classes.baseCa')).first();
                 if (baseCa.length || false) {
                     baseCa = baseCa.ca('get');
                     if (baseCa instanceof ClientAction) {
@@ -1206,7 +1208,7 @@
             }
             var autoTarget;
             if ((!ca.target) && (target)) {
-                autoTarget = target.parents('.' + $.ca('options', 'autoTargetClass')).first();
+                autoTarget = target.parents('.' + $.ca('options', 'classes.autoTarget')).first();
             } else if (typeof(ca.target) === 'string') {
                 autoTarget = $(ca.target);
             }
