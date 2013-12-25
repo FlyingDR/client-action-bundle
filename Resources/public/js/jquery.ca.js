@@ -10,6 +10,7 @@
         classes: {                      // Various CSS classes to use for additional control of client actions behavior
             caApplied: 'ca-applied',    // CSS class to apply to elements that have applied client actions
             autoTarget: 'ca-target',    // CSS class to use to mark target element for client actions that doesn't define their target explicitly
+            replaceTarget: 'ca-replace',// CSS class to use to indicate that target element should be replaced by load results instead of changing its contents 
             baseCa: 'ca-base'           // CSS class to use to mark element that contains "base" client action to use for current state client action
         },
         loading: {                      // Options for resources loading
@@ -801,9 +802,16 @@
             if (this.target) {
                 // Since $.html() strips out JavaScript code - use $.replaceWith() instead
                 var t = $('<div>');
-                this.target.empty().append(t);
-                t.replaceWith(data);
-                $(this.target).trigger('ca.init');
+                if (this.target.hasClass($.ca('options','classes.replaceTarget'))) {
+                    t.append(data);
+                    t = t.children().first();
+                    this.target.replaceWith(t);
+                    this.target = t;
+                } else {
+                    this.target.empty().append(t);
+                    t.replaceWith(data);                    
+                }
+                this.target.trigger('ca.init');
             }
             this.loadingIndicator(false);
             var cb = this.options.onload;
@@ -1166,10 +1174,15 @@
         init: function (ev) {
             // Convert all elements with client actions applied through data- attributes
             // into real client action objects
-            $('*[data-ca-action]', ev.target || null).each(function () {
+            var initCa = function () {
                 var ca = new ClientAction(this);
                 ca.apply(this);
-            });
+            };
+            var target = ev.target || null;
+            $('*[data-ca-action]', target).each(initCa);
+            if ((target) && ($(target).is('[data-ca-action]'))) {
+                initCa.call(target);
+            }
         },
 
         /**
