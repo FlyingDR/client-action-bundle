@@ -2,7 +2,12 @@
 
 namespace Flying\Bundle\ClientActionBundle\ClientAction;
 
+use Flying\Bundle\ClientActionBundle\State\State;
+use Flying\Struct\Property\Boolean;
 use Flying\Struct\Property\Collection;
+use Flying\Struct\Property\PropertyInterface;
+use Flying\Struct\Struct;
+use Flying\Struct\StructInterface;
 
 /**
  * Client action for "state" action
@@ -56,6 +61,72 @@ class StateClientAction extends ClientAction
     public function isValid()
     {
         return (($this->operation == 'reset') || (boolean)sizeof($this->state));
+    }
+
+    /**
+     * Apply app.state modifications to given app.state object
+     *
+     * @param State $state
+     * @reset void
+     */
+    public function apply(State $state)
+    {
+        switch ($this->operation) {
+            case 'reset':
+                $state->reset();
+                break;
+            case 'set':
+                $state->reset();
+                $state->set($this->state->toArray());
+                break;
+            case 'modify':
+            case 'toggle':
+                $this->applyStateModifications($state, $this->state->toArray(), $this->operation);
+                break;
+        }
+    }
+
+    /**
+     * Apply given modifications to given app.state object
+     *
+     * @param Struct $state
+     * @param array $modifications
+     * @return void
+     */
+    protected function applyStateModifications(Struct $state, array $modifications)
+    {
+        foreach ($modifications as $name => $value) {
+            $property = $state->getProperty($name);
+            if ($property instanceof StructInterface) {
+                // Embedded structure
+                if (is_array($value)) {
+                    /** @var $property Struct */
+                    $this->applyStateModifications($property, $value, $this->operation);
+                }
+            } elseif ($property instanceof Collection) {
+                // Collection property
+                if (is_array($value)) {
+                    $property->reset();
+                    $property->setValue($value);
+                } else {
+                    switch ($this->operation) {
+                        case 'modify':
+                            $property->add($value);
+                            break;
+                        case 'toggle':
+                            $property->toggle($value);
+                            break;
+                    }
+                }
+            } elseif ($property instanceof PropertyInterface) {
+                // Simple property
+                if (($property instanceof Boolean) && ($this->operation === 'toggle')) {
+                    $property->setValue(!$property->getValue());
+                } else {
+                    $property->setValue($value);
+                }
+            }
+        }
     }
 
     /**

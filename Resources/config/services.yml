@@ -11,7 +11,6 @@ parameters:
     client_action.state.updater.class: Flying\Bundle\ClientActionBundle\EventListener\StateUpdateListener
 
     client_action.state.nsmap.class: Flying\Struct\Configuration\NamespacesMap
-    client_action.state.nsmap.namespaces: ~
 
     client_action.menu.factory_extension.class: Flying\Bundle\ClientActionBundle\Menu\Factory\ClientActionExtension
     client_action.menu.voter.class: Flying\Bundle\ClientActionBundle\Menu\Voter\ClientActionVoter
@@ -53,7 +52,7 @@ services:
             - { name: kernel.event_subscriber }
     client_action.state.updater:
         class: %client_action.state.updater.class%
-        arguments: [%client_action.state.request_parameter%]
+        arguments: [%client_action.request_parameters.operation%, %client_action.request_parameters.state%]
         tags:
             - { name: kernel.event_subscriber }
             - { name: client_action.state.subscriber }

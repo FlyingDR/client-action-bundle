@@ -25,7 +25,10 @@
                 type: 'POST',
                 async: true
             },
-            stateParam: '__state',      // Name of request parameter to store app.state modifications
+            paramNames: {               // Names of various request parameters
+                operation: '__operation',   // Parameter to define app.state modification operation type
+                state: '__state'            // Parameter to store app.state modifications
+            },
             urlTransformer: {           // URL transformation functions for various tasks
                 load: null              // URL transformer for "load" client actions, it should accept ClientAction object as argument and return either URL string or {url:"url to load",data:"data to send to server"}
             },
@@ -200,18 +203,17 @@
             var struct = this._struct;
             for (var i = 0; i < parts.length; i++) {
                 var name = parts[i];
-                if (typeof(struct[name]) !== 'undefined') {
-                    if (i == (parts.length - 1)) {
-                        return struct[name];
-                    } else {
-                        if (($.isPlainObject(struct[name])) || (struct[name] instanceof Array)) {
-                            struct = struct[name];
-                        } else {
-                            break;
-                        }
-                    }
+                if (typeof(struct[name]) === 'undefined') {
+                    return undefined;
+                }
+                if (i == (parts.length - 1)) {
+                    return struct[name];
                 } else {
-                    break;
+                    if (($.isPlainObject(struct[name])) || (struct[name] instanceof Array)) {
+                        struct = struct[name];
+                    } else {
+                        break;
+                    }
                 }
             }
         },
@@ -314,26 +316,39 @@
         /**
          * Toggle given value into application state
          *
-         * @param {string} path         Path into application state field to toggle value in
-         * @param {*} [value]           Value to toggle
+         * @param {string|Object} path  Path into application state field to toggle value in
+         * @param {*} [value]           Value to toggle (can be skipped)
          * @param {Boolean} [silent]    TRUE to perform silent modification
          */
         toggle: function (path, value, silent) {
-            var entry = this.get(path);
-            if (entry instanceof Array) {
-                if ($.inArray(value, entry) !== -1) {
-                    entry = $.grep(entry, function (v) {
-                        return(v !== value);
-                    });
-                } else {
-                    entry.push(value);
-                }
-            } else if ((entry === true) || (entry === false)) {
-                // value have no meaning here
+            var modifications = {}, modified = [];
+            if (!$.isPlainObject(path)) {
+                modifications[path] = value;
+            } else {
+                modifications = path;
                 silent = value;
-                entry = !entry;
             }
-            this.modify(path, entry, silent);
+            for (var p in modifications) {
+                var v = modifications[p];
+                var entry = this.get(p);
+                if (entry === undefined) {
+                    continue;
+                }
+                if (entry instanceof Array) {
+                    if ($.inArray(v, entry) !== -1) {
+                        entry = $.grep(entry, function (cv) {
+                            return(cv !== v);
+                        });
+                    } else {
+                        entry.push(v);
+                    }
+                    modified.push(p);
+                } else if ((entry === true) || (entry === false)) {
+                    entry = !entry;
+                    modified.push(p);
+                }
+            }
+            this._notify(modified, silent);
         },
 
         /**
@@ -686,7 +701,8 @@
                     if (!$.isFunction(transformer)) {
                         transformer = function (ca) {
                             var state = {};
-                            state[$.ca('options', 'loading.stateParam')] = ca.state;
+                            state[$.ca('options', 'loading.paramNames.operation')] = ca.operation;
+                            state[$.ca('options', 'loading.paramNames.state')] = ca.state;
                             return {url: ca.url, data: $.extend(true, ca.args, state)};
                         }
                     }
@@ -714,9 +730,7 @@
                             state.set(ca.state);
                             break;
                         case 'toggle':
-                            for (var i in ca.state) {
-                                state.toggle(i, ca.state[i]);
-                            }
+                            state.toggle(ca.state);
                             break;
                         case 'modify':
                         default:
@@ -802,14 +816,14 @@
             if (this.target) {
                 // Since $.html() strips out JavaScript code - use $.replaceWith() instead
                 var t = $('<div>');
-                if (this.target.hasClass($.ca('options','classes.replaceTarget'))) {
+                if (this.target.hasClass($.ca('options', 'classes.replaceTarget'))) {
                     t.append(data);
                     t = t.children().first();
                     this.target.replaceWith(t);
                     this.target = t;
                 } else {
                     this.target.empty().append(t);
-                    t.replaceWith(data);                    
+                    t.replaceWith(data);
                 }
                 this.target.trigger('ca.init');
             }

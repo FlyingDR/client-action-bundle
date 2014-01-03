@@ -18,24 +18,36 @@ class StateUpdateListener implements EventSubscriberInterface, StateSubscriberIn
 {
     /**
      * Current application state
+     *
      * @var State
      */
     protected $state;
     /**
-     * Name of request parameter that container state modifications
+     * Name of request parameter that container state modification operation
+     *
      * @var string
      */
-    protected $stateParamName = '__state';
+    protected $stateOperationParamName = '__operation';
+    /**
+     * Name of request parameter that container state modifications
+     *
+     * @var string
+     */
+    protected $stateChangesParamName = '__state';
 
     /**
      * Constructor
      *
-     * @param string $stateParamName OPTIONAL Name of request parameter that container state modifications
+     * @param string $stateOperationParamName OPTIONAL Name of request parameter that container state modification operation
+     * @param string $stateChangesParamName   OPTIONAL Name of request parameter that container state modifications
      */
-    public function __construct($stateParamName = null)
+    public function __construct($stateOperationParamName = null, $stateChangesParamName = null)
     {
-        if ($stateParamName !== null) {
-            $this->stateParamName = $stateParamName;
+        if ($stateOperationParamName !== null) {
+            $this->stateOperationParamName = $stateOperationParamName;
+        }
+        if ($stateChangesParamName !== null) {
+            $this->stateChangesParamName = $stateChangesParamName;
         }
     }
 
@@ -57,16 +69,16 @@ class StateUpdateListener implements EventSubscriberInterface, StateSubscriberIn
     {
         $request = $event->getRequest();
         $bag = null;
-        if ($request->request->has($this->stateParamName)) {
+        if ($request->request->has($this->stateChangesParamName)) {
             $bag = $request->request;
-        } elseif ($request->query->has($this->stateParamName)) {
+        } elseif ($request->query->has($this->stateChangesParamName)) {
             $bag = $request->query;
         }
         if (!$bag) {
             return;
         }
-        $params = $bag->get($this->stateParamName);
-        $bag->remove($this->stateParamName);
+        $params = $bag->get($this->stateChangesParamName);
+        $bag->remove($this->stateChangesParamName);
         if (!is_array($params)) {
             return;
         }
@@ -74,8 +86,12 @@ class StateUpdateListener implements EventSubscriberInterface, StateSubscriberIn
             // No application state is available
             return;
         }
-        $ca = new StateClientAction(array('state' => $params));
-        $this->state->set($ca->state->toArray());
+        $operation = $request->request->get($this->stateOperationParamName);
+        $ca = new StateClientAction(array(
+            'operation' => $operation,
+            'state'     => $params,
+        ));
+        $ca->apply($this->state);
     }
 
     /**
