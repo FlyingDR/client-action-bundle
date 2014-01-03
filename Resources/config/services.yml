@@ -63,6 +63,7 @@ services:
 
     client_action.menu.factory_extension:
         class: %client_action.menu.factory_extension.class%
+        arguments: [%client_action.factory%]
         tags:
             - { name: knp_menu.factory_extension, priority: -10 }
 
