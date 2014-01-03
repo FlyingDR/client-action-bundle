@@ -55,7 +55,7 @@ class ClientActionVoter implements VoterInterface, StateSubscriberInterface
      */
     public function matchItem(ItemInterface $item)
     {
-        $ca = $item->getExtra('ca');
+        $ca = $item->getExtra('client_action');
         if ((!$ca instanceof ClientAction) || (!$ca->isValid())) {
             return null;
         }

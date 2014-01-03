@@ -3,6 +3,7 @@
 namespace Flying\Bundle\ClientActionBundle\Menu\Factory;
 
 use Flying\Bundle\ClientActionBundle\ClientAction\ClientAction;
+use Flying\Bundle\ClientActionBundle\Factory\ClientActionFactory;
 use Knp\Menu\Factory\ExtensionInterface;
 use Knp\Menu\ItemInterface;
 
@@ -11,6 +12,18 @@ use Knp\Menu\ItemInterface;
  */
 class ClientActionExtension implements ExtensionInterface
 {
+    /**
+     * @var ClientActionFactory
+     */
+    protected $factory;
+
+    /**
+     * @param ClientActionFactory $factory
+     */
+    function __construct(ClientActionFactory $factory)
+    {
+        $this->factory = $factory;
+    }
 
     /**
      * Builds the full option array used to configure the item.
@@ -21,17 +34,22 @@ class ClientActionExtension implements ExtensionInterface
      */
     public function buildOptions(array $options)
     {
-        if (!array_key_exists('extras', $options)) {
-            $options['extras'] = array();
-        }
-        if (!array_key_exists('ca', $options['extras'])) {
-            $options['extras']['ca'] = null;
-        }
-        // If client action is given directly, not through "extras" - move it into extras
-        if ((array_key_exists('ca', $options)) && ($options['ca'] instanceof ClientAction)) {
-            $options['extras']['ca'] = $options['ca'];
+        $ca = null;
+        if (array_key_exists('client_action', $options)) {
+            $ca = $options['client_action'];
+            unset($options['client_action']);
+        } elseif (array_key_exists('ca', $options)) {
+            $ca = $options['ca'];
             unset($options['ca']);
+        } elseif ((array_key_exists('extras', $options)) && (is_array($options['extras']))) {
+            if (array_key_exists('client_action', $options['extras'])) {
+                $ca = $options['extras']['client_action'];
+            } elseif (array_key_exists('ca', $options['extras'])) {
+                $ca = $options['extras']['ca'];
+                unset($options['extras']['ca']);
+            }
         }
+        $options['extras']['client_action'] = $ca;
         return $options;
     }
 
@@ -43,12 +61,15 @@ class ClientActionExtension implements ExtensionInterface
      */
     public function buildItem(ItemInterface $item, array $options)
     {
-        $ca = null;
-        if ((array_key_exists('extras', $options)) && (array_key_exists('ca', $options['extras']))) {
-            $ca = $options['extras']['ca'];
+        $ca = $options['extras']['client_action'];
+        if ($ca === null) {
+            return;
         }
-        if ($ca instanceof ClientAction) {
-            $item->setExtra('ca', $ca);
+        if (!$ca instanceof ClientAction) {
+            $ca = $this->factory->create($ca);
+        }
+        if ($ca->isValid()) {
+            $item->setExtra('client_action', $ca);
             $item->setLabelAttributes($ca->toAttrs());
         }
     }

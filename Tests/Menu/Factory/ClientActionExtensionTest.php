@@ -2,13 +2,12 @@
 
 namespace Flying\Bundle\ClientActionBundle\Tests\Menu\Factory;
 
-use Flying\Bundle\ClientActionBundle\ClientAction\StateClientAction;
 use Flying\Bundle\ClientActionBundle\Menu\Factory\ClientActionExtension;
-use Flying\Bundle\ClientActionBundle\Tests\TestCase;
+use Flying\Bundle\ClientActionBundle\Tests\TestCaseUsingFactory;
 use Knp\Menu\ItemInterface;
 use Mockery;
 
-class ClientActionExtensionTest extends TestCase
+class ClientActionExtensionTest extends TestCaseUsingFactory
 {
     public function testInterfaces()
     {
@@ -35,7 +34,7 @@ class ClientActionExtensionTest extends TestCase
                 array(),
                 array(
                     'extras' => array(
-                        'ca' => null,
+                        'client_action' => null,
                     ),
                 ),
             ),
@@ -46,7 +45,7 @@ class ClientActionExtensionTest extends TestCase
                 array(
                     'some'   => 'value',
                     'extras' => array(
-                        'ca' => null,
+                        'client_action' => null,
                     ),
                 ),
             ),
@@ -60,8 +59,8 @@ class ClientActionExtensionTest extends TestCase
                 array(
                     'some'   => 'value',
                     'extras' => array(
-                        'xyz' => 123,
-                        'ca'  => null,
+                        'xyz'           => 123,
+                        'client_action' => null,
                     ),
                 ),
             ),
@@ -76,12 +75,13 @@ class ClientActionExtensionTest extends TestCase
     public function testBuildItem(array $options, $haveCa = false)
     {
         $extension = $this->getTestClass();
-        $item = Mockery::mock('Knp\Menu\ItemInterface');
+        $item = Mockery::mock('Knp\Menu\ItemInterface')->shouldIgnoreMissing();
         if ($haveCa) {
-            $item->shouldReceive('setExtra')->once()
-                ->with('ca', Mockery::type('Flying\Bundle\ClientActionBundle\ClientAction\ClientAction'))->getMock();
+            $item = $item->shouldReceive('setExtra')->once()
+                ->with('client_action', Mockery::type('Flying\Bundle\ClientActionBundle\ClientAction\ClientAction'))->getMock();
         }
         /** @var $item ItemInterface */
+        $options = $extension->buildOptions($options);
         $extension->buildItem($item, $options);
     }
 
@@ -100,14 +100,14 @@ class ClientActionExtensionTest extends TestCase
             ),
             array(
                 array(
-                    'ca' => new StateClientAction(),
+                    'ca' => 'state:modify?a=b',
                 ),
                 true,
             ),
             array(
                 array(
-                    'some' => 'option',
-                    'ca'   => new StateClientAction(),
+                    'some'          => 'option',
+                    'client_action' => 'load:/some/url',
                 ),
                 true,
             ),
@@ -124,7 +124,7 @@ class ClientActionExtensionTest extends TestCase
                 array(
                     'some'   => 'option',
                     'extras' => array(
-                        'ca'  => new StateClientAction(),
+                        'ca'  => 'event:someEvent?a=b',
                         'xyz' => 123,
                     ),
                 ),
@@ -138,6 +138,6 @@ class ClientActionExtensionTest extends TestCase
      */
     protected function getTestClass()
     {
-        return new ClientActionExtension();
+        return new ClientActionExtension($this->getTestFactory());
     }
 }

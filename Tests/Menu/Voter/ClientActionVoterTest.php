@@ -126,7 +126,7 @@ class ClientActionVoterTest extends TestCaseUsingFactory
     {
         if (!$this->factory) {
             $this->factory = new MenuFactory();
-            $this->factory->addExtension(new ClientActionExtension());
+            $this->factory->addExtension(new ClientActionExtension($this->getTestFactory()));
         }
         return $this->factory;
     }
