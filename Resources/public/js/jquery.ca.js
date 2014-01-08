@@ -1157,11 +1157,18 @@
         get: function () {
             var ca = null;
             this.each(function () {
-                var eca = $(this).data($.ca('options', 'caDataKey'));
+                var $this = $(this);
+                var eca = $this.data($.ca('options', 'caDataKey'));
                 if (eca instanceof ClientAction) {
                     ca = eca;
+                    return false;
                 }
-                return(ca === null);
+                if ($this.is('[data-ca-action]')) {
+                    ca = new ClientAction($this);
+                    $this.ca('apply', ca, false);
+                    return false;
+                }
+                return true;
             });
             return ca;
         },
@@ -1190,6 +1197,9 @@
                 var $this = $(this);
                 var ca = $this.data($.ca('options', 'caDataKey'));
                 if (ca instanceof ClientAction) {
+                    applied = true;
+                    return false;
+                } else if ($this.is('[data-ca-action]')) {
                     applied = true;
                     return false;
                 } else {
@@ -1225,16 +1235,11 @@
          * @param {jQuery.Event} ev
          */
         init: function (ev) {
-            // Convert all elements with client actions applied through data- attributes
-            // into real client action objects
-            var initCa = function () {
-                var ca = new ClientAction(this);
-                ca.apply(this);
-            };
             var target = ev.target || null;
-            $('*[data-ca-action]', target).each(initCa);
+            var cls = $.ca('options', 'classes.caApplied');
+            $('*[data-ca-action]', target).addClass(cls);
             if ((target) && ($(target).is('[data-ca-action]'))) {
-                initCa.call(target);
+                $(target).addClass(cls);
             }
         },
 
