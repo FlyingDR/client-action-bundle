@@ -527,7 +527,7 @@
                     re = /([^&=]+)=?([^&]*)/g,
                     query = {};
                 while (e = re.exec(args)) {
-                    var pn = e[1];
+                    var pn = e[1].replace(/^amp;/, '');
                     var pv = e[2];
                     var ind = [], arg, t, i;
                     if (pn.indexOf('[') !== -1) {
