@@ -118,6 +118,44 @@ class StateClientActionTest extends ClientActionTest
                 ),
             ),
         ),
+        
+        array(
+            'source'   => array(
+                'array'  => array(
+                    'action'    => 'state',
+                    'operation' => 'modify',
+                    'state'     => array(
+                        'empty' => array(),
+                    )
+                ),
+                'string' => 'state:?empty=[]',
+            ),
+            'expected' => array(
+                'valid'  => true,
+                'array'  => array(
+                    'action'    => 'state',
+                    'target'    => null,
+                    'operation' => 'modify',
+                    'args'      => array(),
+                    'state'     => array(
+                        'empty' => array(),
+                    ),
+                ),
+                'string' => 'state:modify?empty=[]',
+                'client' => array(
+                    'action'    => 'state',
+                    'operation' => 'modify',
+                    'state'     => array(
+                        'empty' => array(),
+                    ),
+                ),
+                'attrs'  => array(
+                    'data-ca-action'    => 'state',
+                    'data-ca-operation' => 'modify',
+                    'data-ca-state'     => 'empty=[]',
+                ),
+            ),
+        ),
 
         array(
             'source'   => array(

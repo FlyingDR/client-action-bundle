@@ -258,7 +258,9 @@ abstract class ClientAction extends Struct
                 $name = array_shift($indexes);
             }
             $name = $this->convertValueToNative(urldecode($name));
-            if (preg_match('/^\[(.*?)\]$/', $value, $t)) {
+            if ($value === '[]') {
+                $value = array();
+            } elseif (preg_match('/^\[(.*?)\]$/', $value, $t)) {
                 $t = explode(',', $t[1]);
                 $value = array();
                 foreach ($t as $v) {
@@ -369,10 +371,10 @@ abstract class ClientAction extends Struct
                 $range = range(0, sizeof($value) - 1);
                 if ($range !== array_keys($value)) {
                     $value = $this->toPlainArray($value, $prefix . $key);
-                    foreach ($value as $k => $v) {
-                        $plain[$k] = $v;
+                    if (sizeof($value)) {
+                        $plain = array_replace($plain, $value);
+                        continue;
                     }
-                    continue;
                 }
             }
             $plain[$prefix . $key] = $value;
