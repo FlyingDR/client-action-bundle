@@ -88,10 +88,12 @@
                 var value = obj[key];
                 if ($.isPlainObject(value)) {
                     value = this.toPlain(value, prefix + key);
-                    for (var j in value) {
-                        plain[j] = value[j];
+                    if (!$.isEmptyObject(value)) {
+                        for (var j in value) {
+                            plain[j] = value[j];
+                        }
+                        continue;
                     }
-                    continue;
                 }
                 plain[prefix + key] = value;
             }
@@ -538,7 +540,9 @@
                         pn = ind.shift();
                     }
                     pn = this._decodeArg(pn);
-                    if (t = pv.match(/^\[(.*?)\]$/)) {
+                    if (pv === '[]') {
+                        pv = [];
+                    } else if (t = pv.match(/^\[(.*?)\]$/)) {
                         t = t[1].split(',');
                         pv = [];
                         for (i in t) {
