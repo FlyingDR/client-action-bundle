@@ -101,6 +101,41 @@
         },
 
         /**
+         * Convert given object into query string
+         *
+         * @param {Object} obj          Object to convert
+         * @return {String}
+         */
+        toString: function (obj) {
+            var query = [];
+            var plain = this.toPlain(obj);
+            var toStr = function (v) {
+                if (v === null) {
+                    return 'null';
+                } else if (v === true) {
+                    return 'true';
+                } else if (v === false) {
+                    return 'false';
+                } else {
+                    return v;
+                }
+            };
+            for (var i in plain) {
+                var value = plain[i];
+                if ($.isArray(value)) {
+                    value = $.map(value, function (e) {
+                        return encodeURIComponent(toStr(e));
+                    });
+                    value = '[' + value.join(',') + ']';
+                } else {
+                    value = encodeURIComponent(toStr(value));
+                }
+                query.push(encodeURIComponent(i) + '=' + value);
+            }
+            return query.join('&');
+        },
+
+        /**
          * Get list of keys from given object
          *
          * @param {Object} obj          Object to get keys of
@@ -706,7 +741,7 @@
                         transformer = function (ca) {
                             var state = {};
                             state[$.ca('options', 'loading.paramNames.operation')] = ca.operation;
-                            state[$.ca('options', 'loading.paramNames.state')] = ca.state;
+                            state[$.ca('options', 'loading.paramNames.state')] = CaUtils.prototype.toString(ca.state);
                             return {url: ca.url, data: $.extend(true, ca.args, state)};
                         }
                     }

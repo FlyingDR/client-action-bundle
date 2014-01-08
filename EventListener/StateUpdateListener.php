@@ -67,6 +67,10 @@ class StateUpdateListener implements EventSubscriberInterface, StateSubscriberIn
      */
     public function onKernelController(FilterControllerEvent $event)
     {
+        if (!$this->state instanceof State) {
+            // No application state is available
+            return;
+        }
         $request = $event->getRequest();
         $bag = null;
         if ($request->request->has($this->stateChangesParamName)) {
@@ -77,20 +81,19 @@ class StateUpdateListener implements EventSubscriberInterface, StateSubscriberIn
         if (!$bag) {
             return;
         }
-        $params = $bag->get($this->stateChangesParamName);
-        $bag->remove($this->stateChangesParamName);
-        if (!is_array($params)) {
-            return;
-        }
-        if (!$this->state instanceof State) {
-            // No application state is available
-            return;
-        }
         $operation = $request->request->get($this->stateOperationParamName);
-        $ca = new StateClientAction(array(
-            'operation' => $operation,
-            'state'     => $params,
-        ));
+        $bag->remove($this->stateOperationParamName);
+        $state = $bag->get($this->stateChangesParamName);
+        $bag->remove($this->stateChangesParamName);
+        if (is_array($state)) {
+            $ca = array(
+                'operation' => $operation,
+                'state'     => $state,
+            );
+        } else {
+            $ca = 'state:' . $operation . '?' . $state;
+        }
+        $ca = new StateClientAction($ca);
         $ca->apply($this->state);
     }
 
