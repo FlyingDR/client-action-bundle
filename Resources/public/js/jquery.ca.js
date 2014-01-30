@@ -646,7 +646,7 @@
          *
          * @param {Object|String} data
          * @param {*} [value]
-         * @return void
+         * @return {ClientAction}
          */
         modify: function (data, value) {
             if (typeof(data) === 'string') {
@@ -661,6 +661,7 @@
                     }
                 }
             }
+            return this;
         },
 
         /**
@@ -692,10 +693,11 @@
          * Apply this client action to given jQuery elements
          *
          * @param {jQuery} elements
-         * @return void
+         * @return {ClientAction}
          */
         apply: function (elements) {
             $(elements).data($.ca('options', 'caDataKey'), this).addClass($.ca('options', 'classes.caApplied'));
+            return this;
         },
 
         /**
