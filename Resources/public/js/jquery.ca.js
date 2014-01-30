@@ -1022,12 +1022,14 @@
                 state = {};
             }
             var haveDefault = false;
-            if (($.isPlainObject(state.default || false)) && ($.isPlainObject(state.current || false))) {
+            if (($.isPlainObject(state.default || false)) &&
+                (($.isPlainObject(state.current || false)) ||
+                    ((state.current instanceof Array) && (state.current.length === 0)))) {
                 var ck = CaUtils.prototype.getKeys(CaUtils.prototype.toPlain(state.current), true);
                 var dk = CaUtils.prototype.getKeys(CaUtils.prototype.toPlain(state.default), true);
                 var missed = false;
                 for (var k in ck) {
-                    if ($.inArray(k, dk) == -1) {
+                    if ($.inArray(ck[k], dk) == -1) {
                         missed = true;
                         break;
                     }
