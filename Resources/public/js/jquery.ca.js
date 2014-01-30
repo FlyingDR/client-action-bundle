@@ -734,6 +734,9 @@
                     target = $(document);
                 }
                 ca.target = target;
+                if ((!$.isEmptyObject(ca.state)) && (!ca.operation)) {
+                    ca.operation = 'modify';
+                }
             }
             switch (ca.action) {
                 case 'load':
