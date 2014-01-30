@@ -11,7 +11,8 @@
             caApplied: 'ca-applied',    // CSS class to apply to elements that have applied client actions
             autoTarget: 'ca-target',    // CSS class to use to mark target element for client actions that doesn't define their target explicitly
             replaceTarget: 'ca-replace',// CSS class to use to indicate that target element should be replaced by load results instead of changing its contents 
-            baseCa: 'ca-base'           // CSS class to use to mark element that contains "base" client action to use for current state client action
+            baseCa: 'ca-base',          // CSS class to use to mark element that contains "base" client action to use for current state client action
+            disabled: 'ca-disabled'     // CSS class to use to disable client action execution on element without removing client action itself
         },
         loading: {                      // Options for resources loading
             indicator: {
@@ -1255,7 +1256,11 @@
          */
         action: function (ev) {
             var target = $(ev.currentTarget || ev.target);
-            if (!target.ca('applied')) {
+            var className = $.ca('options', 'classes.disabled');
+            if ((!target.length) ||
+                (!target.ca('applied')) ||
+                (target.hasClass(className)) ||
+                (target.parents('.' + className).length)) {
                 return;
             }
             var ca = target.ca('get');
