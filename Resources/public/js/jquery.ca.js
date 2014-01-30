@@ -773,7 +773,7 @@
                             break;
                         case 'modify':
                         default:
-                            ca.modify(ca.state);
+                            state.modify(ca.state);
                             break;
                     }
                     break;
