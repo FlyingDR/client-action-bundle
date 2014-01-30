@@ -36,6 +36,8 @@
             onerror: null               // Callback function to call in a case of error during loading process
         }
     };
+    var caSelectorTemplate = '[data-ca-action]:not(.{ca-base})';
+    var caSelector = caSelectorTemplate.replace('{ca-base}', defaults.classes.baseCa);
 
     function CaUtils() {
 
@@ -1044,6 +1046,7 @@
                 this._state = new CaState(state);
             }
             this._options = new CaStruct(defaults || {}, options);
+            caSelector = caSelectorTemplate.replace('{ca-base}', $.ca('options', 'classes.baseCa'));
             // Setup client actions handlers
             $(document)
                 .on('ca.init', $.proxy(this.handlers.init, this))
@@ -1165,7 +1168,7 @@
                     ca = eca;
                     return false;
                 }
-                if ($this.is('[data-ca-action]')) {
+                if ($this.ca('applied')) {
                     ca = new ClientAction($this);
                     $this.ca('apply', ca, false);
                     return false;
@@ -1201,7 +1204,7 @@
                 if (ca instanceof ClientAction) {
                     applied = true;
                     return false;
-                } else if ($this.is('[data-ca-action]')) {
+                } else if ($this.is(caSelector)) {
                     applied = true;
                     return false;
                 } else {
@@ -1239,8 +1242,8 @@
         init: function (ev) {
             var target = ev.target || null;
             var cls = $.ca('options', 'classes.caApplied');
-            $('*[data-ca-action]', target).addClass(cls);
-            if ((target) && ($(target).is('[data-ca-action]'))) {
+            $(caSelector, target).addClass(cls);
+            if ((target) && ($(target).is(caSelector))) {
                 $(target).addClass(cls);
             }
         },
@@ -1265,15 +1268,12 @@
             if (ca.action === 'state') {
                 var baseCa = target.parents('.' + $.ca('options', 'classes.baseCa')).first();
                 if (baseCa.length || false) {
-                    baseCa = baseCa.ca('get');
-                    if (baseCa instanceof ClientAction) {
-                        baseCa = new ClientAction(baseCa);
-                        baseCa.operation = ca.operation;
-                        for (var i in ca.state) {
-                            baseCa.state[i] = ca.state[i];
-                        }
-                        ca = baseCa;
+                    baseCa = new ClientAction(baseCa);
+                    baseCa.operation = ca.operation;
+                    for (var i in ca.state) {
+                        baseCa.state[i] = ca.state[i];
                     }
+                    ca = baseCa;
                 }
             }
             if ((ca.action === 'load') && (!ca.url) && (target.is('[href]'))) {
