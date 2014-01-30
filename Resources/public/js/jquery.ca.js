@@ -397,7 +397,7 @@
          */
         _notify: function (modified, silent) {
             if ((modified.length) && (!(silent || false))) {
-                $(document).trigger('ca.state.modified', modified);
+                $(document).trigger('ca.state.modified', [modified]);
             }
         }
     });
@@ -757,7 +757,7 @@
                     loader.run();
                     break;
                 case 'event':
-                    $(ca.target).trigger(ca.event, ca.args);
+                    $(ca.target).trigger(ca.event, [ca.args]);
                     break;
                 case 'state':
                     var state = $.ca('state');
@@ -869,7 +869,7 @@
             this.loadingIndicator(false);
             var cb = this.options.onload;
             var cbThis = (this.target) ? this.target : $(document);
-            cbThis.trigger('ca.loaded', data);
+            cbThis.trigger('ca.loaded', [data]);
             switch (this.isCallback(cb)) {
                 case 'function':
                     cb.call(cbThis, data);
@@ -889,7 +889,7 @@
             this.loadingIndicator(false);
             var cb = this.options.onerror;
             var cbThis = (this.target) ? this.target : $(document);
-            cbThis.trigger('ca.load.error', data);
+            cbThis.trigger('ca.load.error', [data]);
             switch (this.isCallback(cb)) {
                 case 'function':
                     cb.call(cbThis, data);
