@@ -10,7 +10,7 @@
         classes: {                      // Various CSS classes to use for additional control of client actions behavior
             caApplied: 'ca-applied',    // CSS class to apply to elements that have applied client actions
             autoTarget: 'ca-target',    // CSS class to use to mark target element for client actions that doesn't define their target explicitly
-            replaceTarget: 'ca-replace',// CSS class to use to indicate that target element should be replaced by load results instead of changing its contents 
+            replaceTarget: 'ca-replace',// CSS class to use to indicate that target element should be replaced by load results instead of changing its contents
             baseCa: 'ca-base',          // CSS class to use to mark element that contains "base" client action to use for current state client action
             disabled: 'ca-disabled'     // CSS class to use to disable client action execution on element without removing client action itself
         },
@@ -35,6 +35,9 @@
             },
             onload: null,               // Callback function to call when loading will be completed
             onerror: null               // Callback function to call in a case of error during loading process
+        },
+        handlers: {
+            caTransformer: null         // Client action transformer callback. Can be used to on-the-fly modify of client actions before they will be run. Should accept client action and context as arguments
         }
     };
     var caSelectorTemplate = '[data-ca-action]:not(.{ca-base})';
@@ -706,8 +709,9 @@
          * @param {Boolean} [normalized]    TRUE if client action is already normalized (can be skipped)
          * @param {Function|jQuery.Deferred|jQuery.Callbacks} [callback]    Callbacks to call upon loading (can be skipped)
          * @param {Object} [options]        Options to use (overrides "loading" section of plugin's options)
+         * @param {jQuery|Node} [context]   Context to call client action in (e.g. element, this action is applied for)
          */
-        run: function (normalized, callback, options) {
+        run: function (normalized, callback, options, context) {
             var ca;
             if ((normalized !== true) && (normalized !== false)) {
                 options = callback;
@@ -740,20 +744,24 @@
                     ca.operation = 'modify';
                 }
             }
+            var caTransformer = $.ca('options', 'handlers.caTransformer');
+            if ($.isFunction(caTransformer)) {
+                caTransformer(ca, context);
+            }
             switch (ca.action) {
                 case 'load':
                     var url = ca.url;
                     var data = ca.args;
-                    var transformer = $.ca('options', 'loading.urlTransformer.load');
-                    if (!$.isFunction(transformer)) {
-                        transformer = function (ca) {
+                    var urlTransformer = $.ca('options', 'loading.urlTransformer.load');
+                    if (!$.isFunction(urlTransformer)) {
+                        urlTransformer = function (ca) {
                             var state = {};
                             state[$.ca('options', 'loading.paramNames.operation')] = ca.operation;
                             state[$.ca('options', 'loading.paramNames.state')] = CaUtils.prototype.toString(ca.state);
                             return {url: ca.url, data: $.extend(true, ca.args, state)};
                         }
                     }
-                    var t = transformer(ca);
+                    var t = urlTransformer(ca, context);
                     if ($.isPlainObject(t)) {
                         url = t.url || url;
                         data = t.data || data;
@@ -1303,7 +1311,7 @@
             if (!ca.isValid()) {
                 return;
             }
-            ca.run(true);
+            ca.run(true, null, {}, target);
         }
 
     };
