@@ -70,7 +70,15 @@ class ClientActionExtension implements ExtensionInterface
         }
         if ($ca->isValid()) {
             $item->setExtra('client_action', $ca);
-            $item->setLabelAttributes($ca->toAttrs());
+            $attrs = array();
+            $la = $item->getLabelAttributes();
+            array_walk($la, function ($v, $k) use (&$attrs) {
+                if (!preg_match('/^data\-ca\-/i', $k)) {
+                    $attrs[$k] = $v;
+                }
+            });
+            $attrs = array_merge($attrs, $ca->toAttrs());
+            $item->setLabelAttributes($attrs);
         }
     }
 
