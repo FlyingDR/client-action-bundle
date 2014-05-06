@@ -7,8 +7,8 @@ parameters:
 
     client_action.state.class: Flying\Bundle\ClientActionBundle\State\State
     client_action.state.initializer.class: Flying\Bundle\ClientActionBundle\EventListener\StateInitListener
-
     client_action.state.updater.class: Flying\Bundle\ClientActionBundle\EventListener\StateUpdateListener
+    client_action.state.view.class: Flying\Bundle\ClientActionBundle\EventListener\StateViewListener
 
     client_action.state.nsmap.class: Flying\Struct\Configuration\NamespacesMap
 
@@ -56,6 +56,11 @@ services:
         tags:
             - { name: kernel.event_subscriber }
             - { name: client_action.state.subscriber }
+    client_action.state.view:
+        class: %client_action.state.view.class%
+        arguments: [@service_container, 'state']
+        tags:
+            - { name: kernel.event_subscriber }
 
     client_action.state.nsmap:
         class: %client_action.state.nsmap.class%
