@@ -952,7 +952,10 @@
                 if (options.enabled) {
                     if (($.isPlainObject(options.indicator)) && ($.isFunction(options.indicator.start))) {
                         $.proxy(options.indicator.start, this.target);
-                    } else if (this.target) {
+                    } else if ((typeof(options.indicator) === 'string') || (options.indicator instanceof jQuery)) {
+                        $(options.indicator).show();
+                    }
+                    if (this.target) {
                         if (options.loadingClass) {
                             this.target.addClass(options.loadingClass);
                         }
@@ -962,15 +965,16 @@
                         if ((options.activity) && ($.fn.activity || false)) {
                             this.target.activity(($.isPlainObject(options.activity)) ? options.activity : {});
                         }
-                    } else if ((typeof(options.indicator) === 'string') || (options.indicator instanceof jQuery)) {
-                        $(options.indicator).show();
                     }
                 }
             } else {
                 // Disable indicator
                 if (($.isPlainObject(options.indicator)) && ($.isFunction(options.indicator.stop))) {
                     $.proxy(options.indicator.stop, this.target);
-                } else if (this.target) {
+                } else if ((typeof(options.indicator) === 'string') || (options.indicator instanceof jQuery)) {
+                    $(options.indicator).hide();
+                }
+                if (this.target) {
                     if ((options.mask) && ($.fn.unmask || false)) {
                         this.target.unmask();
                     }
@@ -980,12 +984,9 @@
                     if (options.loadingClass) {
                         this.target.removeClass(options.loadingClass);
                     }
-                } else if ((typeof(options.indicator) === 'string') || (options.indicator instanceof jQuery)) {
-                    $(options.indicator).hide();
                 }
             }
         },
-
 
         /**
          * Check if given value can be used as callback for resources loading
