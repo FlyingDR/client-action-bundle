@@ -150,7 +150,7 @@ abstract class ClientAction extends Struct
     protected function parse($action)
     {
         $parts = array();
-        $keys = array_keys($this->struct);
+        $keys = array_keys($this->getMetadata()->getProperties());
         foreach ($keys as $key) {
             $parts[$key] = null;
         }
