@@ -55,7 +55,7 @@ class ClientActionExtension extends \Twig_Extension
         foreach ($attrs as $k => $v) {
             $html[] = $k . '="' . htmlentities($v, ENT_COMPAT, 'utf-8') . '"';
         }
-        return ' ' . join(' ', $html);
+        return ' ' . implode(' ', $html);
     }
 
     /**

@@ -53,7 +53,7 @@ abstract class ClientAction extends Struct
             $result .= '[' . $parts['target'] . ']';
         }
         $result .= $this->actionToString();
-        if (sizeof($parts['args'])) {
+        if (count($parts['args'])) {
             $result .= '?' . $this->buildQueryString($parts['args']);
         }
         return $result;
@@ -79,10 +79,7 @@ abstract class ClientAction extends Struct
         }
         $parts = $this->toArray();
         $client = array_filter($parts, function ($v) {
-            if (($v === null) || (is_array($v)) && (!sizeof($v))) {
-                return false;
-            }
-            return true;
+            return (is_array($v)) ? (boolean)count($v) : ($v !== null);
         });
         if (array_key_exists('args', $client)) {
             $client['args'] = $this->toPlainArray($client['args']);
@@ -126,7 +123,7 @@ abstract class ClientAction extends Struct
     public function getModified($modifications)
     {
         $modifications = array_filter($this->parse($modifications), function ($v) {
-            return (is_array($v)) ? (sizeof($v) > 0) : ($v !== null);
+            return (is_array($v)) ? (count($v) > 0) : ($v !== null);
         });
         $ca = clone $this;
         foreach ($modifications as $name => $value) {
@@ -164,7 +161,7 @@ abstract class ClientAction extends Struct
                 $parts['action'] = array_shift($t);
                 $action = array_shift($t);
                 if (preg_match('/^(?:\[([^\]]*)\])(.*)/', $action, $t)) {
-                    if (strlen($t[1])) {
+                    if ($t[1] !== '') {
                         $parts['target'] = $t[1];
                     }
                     $action = $t[2];
@@ -172,10 +169,10 @@ abstract class ClientAction extends Struct
                 if (strpos($action, '?') !== false) {
                     $t = explode('?', $action);
                     $args = array_pop($t);
-                    $action = join('?', $t);
+                    $action = implode('?', $t);
                     $parts['args'] = $this->parseQueryString($args);
                 }
-                if (strlen($action)) {
+                if ($action !== '') {
                     $parts['contents'] = $action;
                 }
             } else {
@@ -238,7 +235,7 @@ abstract class ClientAction extends Struct
     protected function parseQueryString($string)
     {
         $args = array();
-        if (!strlen($string)) {
+        if ($string === '') {
             return $args;
         }
         $parts = explode('&', $string);
@@ -269,17 +266,18 @@ abstract class ClientAction extends Struct
             } else {
                 $value = $this->convertValueToNative(urldecode($value));
             }
-            if (sizeof($indexes)) {
+            if (count($indexes)) {
                 $arg = ((array_key_exists($name, $args)) && (is_array($args[$name]))) ? $args[$name] : array();
-                $a = & $arg;
+                $a = &$arg;
                 do {
                     $i = array_shift($indexes);
                     $i = $this->convertValueToNative(urldecode($i));
-                    if (sizeof($indexes)) {
+                    /** @noinspection NotOptimalIfConditionsInspection */
+                    if (count($indexes)) {
                         if ((!array_key_exists($i, $a)) || (!is_array($a[$i]))) {
                             $a[$i] = array();
                         }
-                        $a = & $a[$i];
+                        $a = &$a[$i];
                     } else {
                         if ($i !== '') {
                             $a[$i] = $value;
@@ -287,7 +285,7 @@ abstract class ClientAction extends Struct
                             $a[] = $value;
                         }
                     }
-                } while (sizeof($indexes));
+                } while (count($indexes));
                 $args[$name] = $arg;
             } else {
                 $args[$name] = $value;
@@ -309,16 +307,17 @@ abstract class ClientAction extends Struct
         $args = $this->toPlainArray($args);
         foreach ($args as $name => $value) {
             if (is_array($value)) {
-                foreach ($value as $k => $v) {
-                    $value[$k] = urlencode($this->convertNativeToString($v));
+                foreach ($value as &$v) {
+                    $v = urlencode($this->convertNativeToString($v));
                 }
-                $value = '[' . join(',', $value) . ']';
+                unset($v);
+                $value = '[' . implode(',', $value) . ']';
             } else {
                 $value = urlencode($this->convertNativeToString($value));
             }
             $query[] = urlencode($name) . '=' . $value;
         }
-        return join('&', $query);
+        return implode('&', $query);
     }
 
     /**
@@ -331,15 +330,15 @@ abstract class ClientAction extends Struct
     {
         $result = array();
         foreach ($array as $name => $value) {
-            $target = & $result;
+            $target = &$result;
             $parts = explode('.', $name);
             do {
                 $part = array_shift($parts);
                 if ((!array_key_exists($part, $target)) || (!is_array($target[$part]))) {
                     $target[$part] = array();
                 }
-                if (sizeof($parts)) {
-                    $target = & $target[$part];
+                if (count($parts)) {
+                    $target = &$target[$part];
                 } else {
                     if (is_array($value)) {
                         array_walk_recursive($value, array($this, 'convertValueToNativeRef'));
@@ -348,7 +347,7 @@ abstract class ClientAction extends Struct
                     }
                     $target[$part] = $value;
                 }
-            } while (sizeof($parts));
+            } while (count($parts));
         }
         return $result;
     }
@@ -368,10 +367,10 @@ abstract class ClientAction extends Struct
         $plain = array();
         foreach ($array as $key => $value) {
             if (is_array($value)) {
-                $range = range(0, sizeof($value) - 1);
+                $range = range(0, count($value) - 1);
                 if ($range !== array_keys($value)) {
                     $value = $this->toPlainArray($value, $prefix . $key);
-                    if (sizeof($value)) {
+                    if (count($value)) {
                         $plain = array_replace($plain, $value);
                         continue;
                     }

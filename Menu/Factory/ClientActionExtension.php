@@ -20,7 +20,7 @@ class ClientActionExtension implements ExtensionInterface
     /**
      * @param ClientActionFactory $factory
      */
-    function __construct(ClientActionFactory $factory)
+    public function __construct(ClientActionFactory $factory)
     {
         $this->factory = $factory;
     }

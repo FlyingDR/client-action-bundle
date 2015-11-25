@@ -15,14 +15,6 @@ class EventClientAction extends StateAwareClientAction
     /**
      * {@inheritdoc}
      */
-    protected function actionToString()
-    {
-        return $this->event;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function isValid()
     {
         return (parent::isValid() && (boolean)strlen($this->event));
@@ -31,11 +23,19 @@ class EventClientAction extends StateAwareClientAction
     /**
      * {@inheritdoc}
      */
+    protected function actionToString()
+    {
+        return $this->event;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     protected function postParse($parts)
     {
         $parts = parent::postParse($parts);
-        if ($parts['action'] == 'event') {
-            if ((!strlen($parts['event'])) &&
+        if ($parts['action'] === 'event') {
+            if ((in_array($parts['event'], array('', null), true)) &&
                 (array_key_exists('contents', $parts)) && (strlen($parts['contents']))
             ) {
                 $parts['event'] = $parts['contents'];

@@ -102,7 +102,7 @@ class StateInitListener implements EventSubscriberInterface
                     // We're already have required state class in container
                     return;
                 }
-            } catch(RuntimeException $e) {
+            } catch (RuntimeException $e) {
                 // This exception can be safely ignored because it is expected at a time
                 // when synthetic state service is not defined yet
             }

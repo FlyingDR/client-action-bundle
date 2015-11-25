@@ -10,7 +10,7 @@
          stopOnFailure="false"
          syntaxCheck="false"
          bootstrap="vendor/autoload.php"
-        >
+>
     <testsuites>
         <testsuite name="Client Action Bundle Test Suite">
             <directory>./Tests/</directory>

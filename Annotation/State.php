@@ -2,6 +2,8 @@
 
 namespace Flying\Bundle\ClientActionBundle\Annotation;
 
+use Doctrine\Common\Annotations\Annotation\Attribute;
+use Doctrine\Common\Annotations\Annotation\Attributes;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ConfigurationAnnotation;
 
 /**
@@ -10,13 +12,14 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\ConfigurationAnnotation;
  * @Annotation
  * @Target({"CLASS", "METHOD"})
  * @Attributes({
- * @Attribute("class", required=false, type="string"),
+ *  @Attribute("class", required=false, type="string"),
  * })
  */
 class State extends ConfigurationAnnotation
 {
     /**
      * Application state class name
+     *
      * @var string
      */
     protected $class;
@@ -24,7 +27,7 @@ class State extends ConfigurationAnnotation
     /**
      * Class constructor
      *
-     * @param array $values     An array of key/value parameters
+     * @param array $values An array of key/value parameters
      */
     public function __construct(array $values)
     {

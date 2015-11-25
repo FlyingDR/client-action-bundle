@@ -36,6 +36,7 @@ class ClientActionFactory
 {
     /**
      * List of registered client action classes
+     *
      * @var array
      */
     protected $actions = array();
@@ -51,8 +52,8 @@ class ClientActionFactory
     /**
      * Register client action type
      *
-     * @param ClientAction $action  Reference implementation of client action of given type
-     * @param string $type          OPTIONAL Client action type
+     * @param ClientAction $action Reference implementation of client action of given type
+     * @param string $type         OPTIONAL Client action type
      * @return void
      */
     public function registerAction(ClientAction $action, $type)
@@ -63,8 +64,8 @@ class ClientActionFactory
     /**
      * Create client action object by given information
      *
-     * @param string|array|ClientAction $info   Client action information to use to create new client action
-     * @param array $config                     OPTIONAL Configuration options for new client action object
+     * @param string|array|ClientAction $info Client action information to use to create new client action
+     * @param array $config                   OPTIONAL Configuration options for new client action object
      * @throws \InvalidArgumentException
      * @return ClientAction
      */

@@ -38,8 +38,8 @@ class State extends StorableStruct implements ClientExportInterface
     /**
      * Convert given structure to its client side representation
      *
-     * @param Struct $struct    Structure to convert
-     * @param string $prefix    OPTIONAL Prefix to prepend to structure's keys
+     * @param Struct $struct Structure to convert
+     * @param string $prefix OPTIONAL Prefix to prepend to structure's keys
      * @return array
      */
     protected function structToClient(Struct $struct, $prefix = '')
@@ -52,6 +52,7 @@ class State extends StorableStruct implements ClientExportInterface
             $property = $struct->getProperty($key);
             if ($property instanceof Struct) {
                 $child = $this->structToClient($property, $prefix . $key);
+                /** @noinspection SlowArrayOperationsInLoopInspection */
                 $client = array_merge($client, $child);
             } elseif ($property instanceof ClientExportInterface) {
                 $client[$prefix . $key] = $property->toClient();
@@ -115,7 +116,7 @@ class State extends StorableStruct implements ClientExportInterface
             $property = $struct->getProperty($key);
             if ($property instanceof Struct) {
                 $m = $this->getStructModifications($property);
-                if (sizeof($m)) {
+                if (count($m)) {
                     $modifications[$key] = $m;
                 }
             } elseif ($property instanceof Property) {
@@ -139,6 +140,7 @@ class State extends StorableStruct implements ClientExportInterface
      */
     protected function lazyConfigInit($name)
     {
+        /** @noinspection DegradedSwitchInspection */
         switch ($name) {
             case 'explicit_metadata_class':
                 // App.state structures should have at least base functionality of app.state

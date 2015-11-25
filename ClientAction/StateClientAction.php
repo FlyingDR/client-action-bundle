@@ -24,7 +24,7 @@ class StateClientAction extends ClientAction
     /**
      * @var array
      */
-    protected $stateOperations = array(
+    protected static $stateOperations = array(
         'reset'  => '!',
         'set'    => '=',
         'modify' => '',
@@ -60,7 +60,7 @@ class StateClientAction extends ClientAction
      */
     public function isValid()
     {
-        return (($this->operation == 'reset') || (boolean)sizeof($this->state));
+        return (($this->operation === 'reset') || (boolean)count($this->state));
     }
 
     /**
@@ -81,7 +81,7 @@ class StateClientAction extends ClientAction
                 break;
             case 'modify':
             case 'toggle':
-                $this->applyStateModifications($state, $this->state->toArray(), $this->operation);
+                $this->applyStateModifications($state, $this->state->toArray());
                 break;
         }
     }
@@ -101,7 +101,7 @@ class StateClientAction extends ClientAction
                 // Embedded structure
                 if (is_array($value)) {
                     /** @var $property Struct */
-                    $this->applyStateModifications($property, $value, $this->operation);
+                    $this->applyStateModifications($property, $value);
                 }
             } elseif ($property instanceof Collection) {
                 // Collection property
@@ -135,18 +135,16 @@ class StateClientAction extends ClientAction
     protected function preParse(&$action, $parts)
     {
         $parts = parent::preParse($action, $parts);
-        if (is_string($action)) {
-            if (preg_match('/^(.+?)#([\!\=\~])?((?:[a-z0-9\[\]\.\%\+\-\_]+\=[a-z0-9\[\]\.\%\+\-\_]+\&?)*)$/Usi', $action, $t)) {
-                $ca = $t[1];
-                $operation = $t[2];
-                $state = $t[3];
-                $ops = array_flip($this->stateOperations);
-                if ((strlen($operation)) && (array_key_exists($operation, $ops))) {
-                    $parts['operation_flag'] = $ops[$operation];
-                }
-                $parts['state'] = $this->parseQueryString($state);
-                $action = $ca;
+        if ((is_string($action)) && (preg_match('/^(.+?)#([\!\=\~])?((?:[a-z0-9\[\]\.\%\+\-\_]+\=[a-z0-9\[\]\.\%\+\-\_]+\&?)*)$/Usi', $action, $t))) {
+            $ca = $t[1];
+            $operation = $t[2];
+            $state = $t[3];
+            $ops = array_flip(self::$stateOperations);
+            if ((strlen($operation)) && (array_key_exists($operation, $ops))) {
+                $parts['operation_flag'] = $ops[$operation];
             }
+            $parts['state'] = $this->parseQueryString($state);
+            $action = $ca;
         }
         return $parts;
     }
@@ -157,8 +155,8 @@ class StateClientAction extends ClientAction
     protected function postParse($parts)
     {
         $parts = parent::postParse($parts);
-        if ($parts['action'] == 'state') {
-            if (!strlen($parts['operation'])) {
+        if ($parts['action'] === 'state') {
+            if (in_array($parts['operation'], array('', null), true)) {
                 if ((array_key_exists('contents', $parts)) && (strlen($parts['contents']))) {
                     $parts['operation'] = $parts['contents'];
                 } elseif ((array_key_exists('operation_flag', $parts)) && (strlen($parts['operation_flag']))) {
@@ -169,9 +167,7 @@ class StateClientAction extends ClientAction
             if ((!is_array($parts['state'])) && (is_array($parts['args']))) {
                 $parts['state'] = $parts['args'];
             }
-            unset($parts['target']);
-            unset($parts['args']);
-            unset($parts['contents']);
+            unset($parts['target'], $parts['args'], $parts['contents']);
         }
         if (!is_array($parts['state'])) {
             $parts['state'] = array();

@@ -380,7 +380,7 @@
                 if (entry instanceof Array) {
                     if ($.inArray(v, entry) !== -1) {
                         entry = $.grep(entry, function (cv) {
-                            return(cv !== v);
+                            return (cv !== v);
                         });
                     } else {
                         entry.push(v);
@@ -557,7 +557,7 @@
          */
         _parseArgs: function (args) {
             if ($.isPlainObject(args)) {
-                return(args);
+                return (args);
             }
             if (args.match(/^\{.*?\}$/)) {
                 // Parse as JSON string
@@ -602,7 +602,7 @@
                 }
                 args = query;
             }
-            return(args);
+            return (args);
         },
 
         _decodeArg: function (str) {
@@ -857,7 +857,7 @@
          */
         run: function () {
             this.loadingIndicator(true);
-            return($.ajax(this.url, $.extend(true, this.options.ajax, {
+            return ($.ajax(this.url, $.extend(true, this.options.ajax, {
                 context: this,
                 success: this.onload,
                 error: this.onerror
@@ -996,16 +996,16 @@
          */
         isCallback: function (callback) {
             if ($.isFunction(callback)) {       // Plain function
-                return('function');
+                return ('function');
             }
             if ($.isPlainObject(callback)) {
                 if ($.isFunction(callback.promise)) {       // $.Deferred object
-                    return('deferred');
+                    return ('deferred');
                 } else if ($.isFunction(callback.fire)) {   // $.Callbacks object
-                    return('callbacks');
+                    return ('callbacks');
                 }
             }
-            return(false);
+            return (false);
         }
     };
 
@@ -1041,7 +1041,7 @@
             var haveDefault = false;
             if (($.isPlainObject(state.default || false)) &&
                 (($.isPlainObject(state.current || false)) ||
-                    ((state.current instanceof Array) && (state.current.length === 0)))) {
+                ((state.current instanceof Array) && (state.current.length === 0)))) {
                 var ck = CaUtils.prototype.getKeys(CaUtils.prototype.toPlain(state.current), true);
                 var dk = CaUtils.prototype.getKeys(CaUtils.prototype.toPlain(state.default), true);
                 var missed = false;
@@ -1164,7 +1164,7 @@
             if (!(ca instanceof ClientAction) || (clone)) {
                 ca = new ClientAction(ca);
             }
-            return(this.each(function () {
+            return (this.each(function () {
                 ca.apply(this);
             }));
         },
@@ -1199,7 +1199,7 @@
          * @return {jQuery}
          */
         remove: function () {
-            return(this.each(function () {
+            return (this.each(function () {
                 var $this = $(this);
                 $this.removeData($.ca('options', 'caDataKey'));
                 $this.removeClass($.ca('options', 'classes.caApplied'));
@@ -1327,21 +1327,21 @@
     $[pluginName] = function (method) {
         if ((plugin.services[method] || false) && (method.charAt(0) != '_')) {
             // Run explicitly called plugin's service method
-            return(plugin.services[method].apply(plugin, Array.prototype.slice.call(arguments, 1)));
+            return (plugin.services[method].apply(plugin, Array.prototype.slice.call(arguments, 1)));
         } else {
             // Create client action object using given information
-            return(plugin.services.create.apply(plugin, arguments));
+            return (plugin.services.create.apply(plugin, arguments));
         }
     };
 
     // Plugin's context-dependent methods execution
     $.fn[pluginName] = function (method) {
         if ((plugin.methods[method] || false) && (method.charAt(0) != '_')) {
-            return(plugin.methods[method].apply(this, Array.prototype.slice.call(arguments, 1)));
+            return (plugin.methods[method].apply(this, Array.prototype.slice.call(arguments, 1)));
         } else if ((typeof(method) === 'object') || (!method)) {
-            return(plugin.services.init.apply(plugin, arguments));
+            return (plugin.services.init.apply(plugin, arguments));
         } else {
-            return($.error('Method ' + method + ' does not exist on jQuery.' + pluginName));
+            return ($.error('Method ' + method + ' does not exist on jQuery.' + pluginName));
         }
     };
 

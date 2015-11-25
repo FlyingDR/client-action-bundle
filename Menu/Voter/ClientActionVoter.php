@@ -2,9 +2,9 @@
 
 namespace Flying\Bundle\ClientActionBundle\Menu\Voter;
 
-use Flying\Bundle\ClientActionBundle\State\StateSubscriberInterface;
 use Flying\Bundle\ClientActionBundle\ClientAction\ClientAction;
 use Flying\Bundle\ClientActionBundle\State\State;
+use Flying\Bundle\ClientActionBundle\State\StateSubscriberInterface;
 use Knp\Menu\ItemInterface;
 use Knp\Menu\Matcher\Voter\VoterInterface;
 
@@ -24,7 +24,7 @@ class ClientActionVoter implements VoterInterface, StateSubscriberInterface
      *
      * @var array
      */
-    protected $stateArray = null;
+    protected $stateArray;
 
     /**
      * {@inheritdoc}
@@ -69,7 +69,7 @@ class ClientActionVoter implements VoterInterface, StateSubscriberInterface
         foreach ($ca['state'] as $name => $value) {
             if (array_key_exists($name, $state)) {
                 if (is_array($value)) {
-                    if (range(0, sizeof($value) - 1) === array_keys($value)) {
+                    if (range(0, count($value) - 1) === array_keys($value)) {
                         sort($value);
                     } else {
                         asort($value);
@@ -77,14 +77,14 @@ class ClientActionVoter implements VoterInterface, StateSubscriberInterface
                 }
                 $sv = $state[$name];
                 if (is_array($sv)) {
-                    if (range(0, sizeof($sv) - 1) === array_keys($sv)) {
+                    if (range(0, count($sv) - 1) === array_keys($sv)) {
                         sort($sv);
                     } else {
                         asort($sv);
                     }
                 }
-                if (($ca['operation'] === 'toggle') && (is_bool($sv))) {
-                    // Boolean value toggling, element is active if current value is active 
+                if ((is_bool($sv)) && ($ca['operation'] === 'toggle')) {
+                    // Boolean value toggling, element is active if current value is active
                     $matched &= ($sv === true);
                 } else {
                     $matched &= ($value === $sv);

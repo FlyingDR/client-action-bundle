@@ -28,14 +28,6 @@ class LoadClientAction extends StateAwareClientAction
     /**
      * {@inheritdoc}
      */
-    protected function actionToString()
-    {
-        return $this->url;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function toClient()
     {
         $client = parent::toClient();
@@ -67,11 +59,19 @@ class LoadClientAction extends StateAwareClientAction
     /**
      * {@inheritdoc}
      */
+    protected function actionToString()
+    {
+        return $this->url;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     protected function postParse($parts)
     {
         $parts = parent::postParse($parts);
-        if ($parts['action'] == 'load') {
-            if ((!strlen($parts['url'])) &&
+        if ($parts['action'] === 'load') {
+            if ((in_array($parts['url'], array(null, ''), true)) &&
                 (array_key_exists('contents', $parts)) && (strlen($parts['contents']))
             ) {
                 $parts['url'] = $parts['contents'];
@@ -97,6 +97,7 @@ class LoadClientAction extends StateAwareClientAction
      */
     protected function validateConfig($name, &$value)
     {
+        /** @noinspection DegradedSwitchInspection */
         switch ($name) {
             case 'url_generator':
                 if (($value !== null) && (!$value instanceof UrlGeneratorInterface)) {
