@@ -10,26 +10,29 @@ use Flying\Bundle\ClientActionBundle\Factory\ClientActionFactory;
 class TestCaseUsingFactory extends TestCase
 {
     /**
-     * List of client action classes to use for test
-     *
-     * @var array
-     */
-    protected $caClassesList = array(
-        'state' => 'Flying\Bundle\ClientActionBundle\ClientAction\StateClientAction',
-        'event' => 'Flying\Bundle\ClientActionBundle\ClientAction\EventClientAction',
-        'load'  => 'Flying\Bundle\ClientActionBundle\ClientAction\LoadClientAction',
-    );
-
-    /**
      * @return ClientActionFactory
      */
     public function getTestFactory()
     {
         $factory = new ClientActionFactory();
-        foreach ($this->caClassesList as $type => $class) {
+        foreach ($this->getClientActionClassesList() as $type => $class) {
             $ca = new $class();
             $factory->registerAction($ca, $type);
         }
         return $factory;
+    }
+
+    /**
+     * Get list of client action classes to use for test
+     *
+     * @return array
+     */
+    public function getClientActionClassesList()
+    {
+        return array(
+            'state' => 'Flying\Bundle\ClientActionBundle\ClientAction\StateClientAction',
+            'event' => 'Flying\Bundle\ClientActionBundle\ClientAction\EventClientAction',
+            'load'  => 'Flying\Bundle\ClientActionBundle\ClientAction\LoadClientAction',
+        );
     }
 }

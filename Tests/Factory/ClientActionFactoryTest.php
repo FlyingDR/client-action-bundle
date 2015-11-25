@@ -11,7 +11,7 @@ class ClientActionFactoryTest extends TestCaseUsingFactory
     /**
      * @var array
      */
-    protected $tests = array(
+    protected static $tests = array(
         array(
             'state',
             'state:modify?a=b&c=d',
@@ -74,13 +74,13 @@ class ClientActionFactoryTest extends TestCaseUsingFactory
     {
         $factory = $this->getTestFactory();
         $ca = $factory->create($info);
-        $this->assertInstanceOf($class, $ca);
+        static::assertInstanceOf($class, $ca);
         foreach ($ca as $name => $value) {
             if (array_key_exists($name, $expected)) {
                 if ($value instanceof ComplexPropertyInterface) {
                     $value = $value->toArray();
                 }
-                $this->assertEquals($expected[$name], $value);
+                static::assertEquals($expected[$name], $value);
             }
         }
     }
@@ -88,11 +88,12 @@ class ClientActionFactoryTest extends TestCaseUsingFactory
     public function dpCreationUsingFactory()
     {
         $tests = array();
-        foreach ($this->tests as $test) {
+        $caClassesList = $this->getClientActionClassesList();
+        foreach (self::$tests as $test) {
             $type = array_shift($test);
             $string = array_shift($test);
             $array = array_shift($test);
-            $class = $this->caClassesList[$type];
+            $class = $caClassesList[$type];
             $tests[] = array(
                 $string, $class, $array,
             );

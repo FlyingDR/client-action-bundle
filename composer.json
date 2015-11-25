@@ -30,6 +30,7 @@
         "mockery/mockery": "~0.8",
         "knplabs/knp-menu": "~2.0",
         "knplabs/knp-menu-bundle": "~2.0",
-        "twig/twig": "~1.12"
+        "twig/twig": "~1.12",
+        "phpunit/phpunit": "~4.8"
     }
 }

@@ -24,14 +24,14 @@ class ClientActionVoterTest extends TestCaseUsingFactory
     public function testInterfaces()
     {
         $voter = $this->getTestClass();
-        $this->assertInstanceOf('Knp\Menu\Matcher\Voter\VoterInterface', $voter);
+        static::assertInstanceOf('Knp\Menu\Matcher\Voter\VoterInterface', $voter);
     }
 
     public function testNonClientActionItemMatching()
     {
         $voter = $this->getTestClass();
         $item = $this->getMenuFactory()->createItem('test');
-        $this->assertNull($voter->matchItem($item));
+        static::assertNull($voter->matchItem($item));
     }
 
     /**
@@ -45,7 +45,7 @@ class ClientActionVoterTest extends TestCaseUsingFactory
         $voter = $this->getTestClass($state);
         $item = $this->getMenuItem($ca);
         $actual = $voter->matchItem($item);
-        $this->assertSame($expected, $actual);
+        static::assertSame($expected, $actual);
     }
 
     public function dpItemMatching()

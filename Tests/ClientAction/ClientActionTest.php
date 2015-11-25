@@ -13,7 +13,7 @@ abstract class ClientActionTest extends TestCase
      *
      * @var array
      */
-    protected $tests = array();
+    protected static $tests = array();
 
     /**
      * @param array $data
@@ -31,7 +31,7 @@ abstract class ClientActionTest extends TestCase
                 if ($value instanceof ComplexPropertyInterface) {
                     $value = $value->toArray();
                 }
-                $this->assertEquals($expected[$name], $value);
+                static::assertEquals($expected[$name], $value);
             }
         }
     }
@@ -39,7 +39,7 @@ abstract class ClientActionTest extends TestCase
     public function dpCreationFromArray()
     {
         $tests = array();
-        foreach ($this->tests as $test) {
+        foreach ($this->getTestDataSets() as $test) {
             if ((array_key_exists('array', $test['source'])) && (array_key_exists('array', $test['expected']))) {
                 $tests[] = array($test['source']['array'], $test['expected']['array']);
             }
@@ -48,7 +48,7 @@ abstract class ClientActionTest extends TestCase
     }
 
     /**
-     * @param string $ca
+     * @param ClientAction|string $ca
      * @param array $expected
      * @dataProvider dpCreationFromString
      */
@@ -60,7 +60,7 @@ abstract class ClientActionTest extends TestCase
                 if ($value instanceof ComplexPropertyInterface) {
                     $value = $value->toArray();
                 }
-                $this->assertEquals($expected[$name], $value);
+                static::assertEquals($expected[$name], $value);
             }
         }
     }
@@ -68,7 +68,7 @@ abstract class ClientActionTest extends TestCase
     public function dpCreationFromString()
     {
         $tests = array();
-        foreach ($this->tests as $test) {
+        foreach ($this->getTestDataSets() as $test) {
             if ((array_key_exists('string', $test['source'])) && (array_key_exists('array', $test['expected']))) {
                 $tests[] = array($test['source']['string'], $test['expected']['array']);
             }
@@ -92,7 +92,7 @@ abstract class ClientActionTest extends TestCase
                 if ($value instanceof ComplexPropertyInterface) {
                     $value = $value->toArray();
                 }
-                $this->assertEquals($expected[$name], $value);
+                static::assertEquals($expected[$name], $value);
             }
         }
     }
@@ -100,7 +100,7 @@ abstract class ClientActionTest extends TestCase
     public function dpCreationFromClientAction()
     {
         $tests = array();
-        foreach ($this->tests as $test) {
+        foreach ($this->getTestDataSets() as $test) {
             if ((array_key_exists('array', $test['source'])) && (array_key_exists('array', $test['expected']))) {
                 $ca = $this->getTestClientAction($test['source']['array']);
                 $tests[] = array($ca, $test['expected']['array']);
@@ -114,11 +114,11 @@ abstract class ClientActionTest extends TestCase
         $ca = $this->getTestClientAction();
         $action = $ca->action;
         $ca->action = 'modified';
-        $this->assertEquals($ca->action, $action);
+        static::assertEquals($ca->action, $action);
     }
 
     /**
-     * @param string $ca
+     * @param ClientAction|string $ca
      * @param boolean $expected
      * @dataProvider dpCsValid
      */
@@ -126,13 +126,13 @@ abstract class ClientActionTest extends TestCase
     {
         $ca = $this->getTestClientAction($ca);
         $actual = $ca->isValid();
-        $this->assertEquals($expected, $actual);
+        static::assertEquals($expected, $actual);
     }
 
     public function dpCsValid()
     {
         $tests = array();
-        foreach ($this->tests as $test) {
+        foreach ($this->getTestDataSets() as $test) {
             if ((array_key_exists('string', $test['source'])) && (array_key_exists('valid', $test['expected']))) {
                 $tests[] = array($test['source']['string'], $test['expected']['valid']);
             }
@@ -141,7 +141,7 @@ abstract class ClientActionTest extends TestCase
     }
 
     /**
-     * @param string $ca
+     * @param ClientAction|string $ca
      * @param string $expected
      * @param boolean $valid
      * @dataProvider dpConversionToString
@@ -154,14 +154,14 @@ abstract class ClientActionTest extends TestCase
         $ca = $this->getTestClientAction($ca);
         $actual = $ca->toString();
         if ($valid) {
-            $this->assertEquals($expected, $actual);
+            static::assertEquals($expected, $actual);
         }
     }
 
     public function dpConversionToString()
     {
         $tests = array();
-        foreach ($this->tests as $test) {
+        foreach ($this->getTestDataSets() as $test) {
             if ((array_key_exists('string', $test['source'])) &&
                 (array_key_exists('valid', $test['expected'])) &&
                 (array_key_exists('string', $test['expected']))
@@ -176,13 +176,13 @@ abstract class ClientActionTest extends TestCase
     public function testOnlyValidClientActionsCanBeConvertedToString()
     {
         $ca = $this->getTestClientAction(array());
-        $this->assertFalse($ca->isValid());
+        static::assertFalse($ca->isValid());
         $this->setExpectedException('\RuntimeException');
         $ca->toString();
     }
 
     /**
-     * @param string $ca
+     * @param ClientAction|string $ca
      * @param array $expected
      * @dataProvider dpConversionToArray
      */
@@ -190,13 +190,13 @@ abstract class ClientActionTest extends TestCase
     {
         $ca = $this->getTestClientAction($ca);
         $actual = $ca->toArray();
-        $this->assertEquals($expected, $actual);
+        static::assertEquals($expected, $actual);
     }
 
     public function dpConversionToArray()
     {
         $tests = array();
-        foreach ($this->tests as $test) {
+        foreach ($this->getTestDataSets() as $test) {
             if ((array_key_exists('string', $test['source'])) && (array_key_exists('array', $test['expected']))) {
                 $tests[] = array($test['source']['string'], $test['expected']['array']);
             }
@@ -205,7 +205,7 @@ abstract class ClientActionTest extends TestCase
     }
 
     /**
-     * @param string $ca
+     * @param ClientAction|string $ca
      * @param array $expected
      * @param boolean $exception
      * @dataProvider dpConversionToClient
@@ -218,14 +218,14 @@ abstract class ClientActionTest extends TestCase
         }
         $actual = $ca->toClient();
         if (!$exception) {
-            $this->assertEquals($expected, $actual);
+            static::assertEquals($expected, $actual);
         }
     }
 
     public function dpConversionToClient()
     {
         $tests = array();
-        foreach ($this->tests as $test) {
+        foreach ($this->getTestDataSets() as $test) {
             if ((array_key_exists('string', $test['source'])) &&
                 (array_key_exists('valid', $test['expected'])) &&
                 (array_key_exists('client', $test['expected']))
@@ -247,13 +247,13 @@ abstract class ClientActionTest extends TestCase
     public function testOnlyValidClientActionsCanBeConvertedToClient()
     {
         $ca = $this->getTestClientAction(array());
-        $this->assertFalse($ca->isValid());
+        static::assertFalse($ca->isValid());
         $this->setExpectedException('\RuntimeException');
         $ca->toClient();
     }
 
     /**
-     * @param string $ca
+     * @param ClientAction|string $ca
      * @param array $expected
      * @param boolean $exception
      * @dataProvider dpConversionToAttrs
@@ -266,14 +266,14 @@ abstract class ClientActionTest extends TestCase
         }
         $actual = $ca->toAttrs();
         if (!$exception) {
-            $this->assertEquals($expected, $actual);
+            static::assertEquals($expected, $actual);
         }
     }
 
     public function dpConversionToAttrs()
     {
         $tests = array();
-        foreach ($this->tests as $test) {
+        foreach ($this->getTestDataSets() as $test) {
             if ((array_key_exists('string', $test['source'])) &&
                 (array_key_exists('valid', $test['expected'])) &&
                 (array_key_exists('attrs', $test['expected']))
@@ -295,13 +295,13 @@ abstract class ClientActionTest extends TestCase
     public function testOnlyValidClientActionsCanBeConvertedToAttrs()
     {
         $ca = $this->getTestClientAction(array());
-        $this->assertFalse($ca->isValid());
+        static::assertFalse($ca->isValid());
         $this->setExpectedException('\RuntimeException');
         $ca->toAttrs();
     }
 
     /**
-     * @param string $ca
+     * @param ClientAction|string $ca
      * @param array $modification
      * @dataProvider dpGetModified
      */
@@ -309,7 +309,7 @@ abstract class ClientActionTest extends TestCase
     {
         $ca = $this->getTestClientAction($ca);
         $modified = $ca->getModified($modification);
-        $this->assertFalse($ca === $modified);
+        static::assertFalse($ca === $modified);
         $expected = $ca->toArray();
         foreach ($modification as $name => $value) {
             if (!array_key_exists($name, $expected)) {
@@ -325,7 +325,7 @@ abstract class ClientActionTest extends TestCase
             $expected[$name] = $value;
         }
         $actual = $modified->toArray();
-        $this->assertEquals($expected, $actual);
+        static::assertEquals($expected, $actual);
     }
 
     abstract public function dpGetModified();
@@ -340,9 +340,9 @@ abstract class ClientActionTest extends TestCase
         $ca = $this->getTestClientAction();
         $action = $ca->action;
         $ca = $this->getTestClientAction($action . ':?arg=' . $value);
-        $this->assertSame($expected, $ca->args['arg']);
+        static::assertSame($expected, $ca->args['arg']);
         $ca = $this->getTestClientAction($action . ':?arg[test]=' . $value);
-        $this->assertSame($expected, $ca->args['arg']['test']);
+        static::assertSame($expected, $ca->args['arg']['test']);
     }
 
     public function dpValuesConversion()
@@ -363,6 +363,13 @@ abstract class ClientActionTest extends TestCase
             array('1a', '1a'),
         );
     }
+
+    /**
+     * Get test data sets to run tests on
+     *
+     * @return array
+     */
+    abstract protected function getTestDataSets();
 
     /**
      * Get test client action object

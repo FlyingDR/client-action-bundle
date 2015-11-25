@@ -12,7 +12,7 @@ class ClientActionExtensionTest extends TestCaseUsingFactory
     public function testInterfaces()
     {
         $extension = $this->getTestClass();
-        $this->assertInstanceOf('Knp\Menu\Factory\ExtensionInterface', $extension);
+        static::assertInstanceOf('Knp\Menu\Factory\ExtensionInterface', $extension);
     }
 
     /**
@@ -24,7 +24,7 @@ class ClientActionExtensionTest extends TestCaseUsingFactory
     {
         $extension = $this->getTestClass();
         $actual = $extension->buildOptions($options);
-        $this->assertEquals($expected, $actual);
+        static::assertEquals($expected, $actual);
     }
 
     public function dpBuildOptions()
@@ -78,7 +78,11 @@ class ClientActionExtensionTest extends TestCaseUsingFactory
         $item = Mockery::mock('Knp\Menu\ItemInterface')->shouldIgnoreMissing();
         if ($haveCa) {
             $item = $item->shouldReceive('setExtra')->once()
-                ->with('client_action', Mockery::type('Flying\Bundle\ClientActionBundle\ClientAction\ClientAction'))->getMock();
+                ->with('client_action', Mockery::type('Flying\Bundle\ClientActionBundle\ClientAction\ClientAction'))
+                ->getMock()
+                ->shouldReceive('getLabelAttributes')->once()
+                ->andReturn(array())
+                ->getMock();
         }
         /** @var $item ItemInterface */
         $options = $extension->buildOptions($options);
